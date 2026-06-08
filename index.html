@@ -126,8 +126,6 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
     <section class="stats">
       <div class="stat"><small>Players</small><strong id="statPlayers">15</strong></div>
       <div class="stat"><small>Teams drawn</small><strong id="statTeams">60</strong></div>
-      <div class="stat"><small>Best ranking total</small><strong id="statBest">85</strong></div>
-      <div class="stat"><small>Group clashes</small><strong id="statClashes">0</strong></div>
     </section>
 
     <div class="layout">
@@ -367,8 +365,6 @@ document.getElementById("resetMap").addEventListener("click", () => {
 
 document.getElementById("statPlayers").textContent = players.length;
 document.getElementById("statTeams").textContent = players.reduce((n,p)=>n+p.teams.length,0);
-document.getElementById("statBest").textContent = Math.min(...players.map(p=>p.totalRank));
-document.getElementById("statClashes").textContent = players.reduce((n,p)=>n+clashCount(p),0);
 
 renderCards();
 renderMap();
