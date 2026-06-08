@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sweetmore's World Cup Sweepstake - Fixtures & Results</title>
+<style>
+
+:root {
+  --bg: #07121f; --panel: rgba(255,255,255,.08); --text: #eef6ff; --muted: #a9bfd6;
+  --gold: #ffd166; --green: #2dd4bf; --red:#ff6b6b; --blue:#7dd3fc; --shadow: 0 18px 50px rgba(0,0,0,.35);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(45,212,191,.24), transparent 34rem),
+    radial-gradient(circle at 80% 15%, rgba(125,211,252,.22), transparent 32rem),
+    radial-gradient(circle at bottom right, rgba(255,209,102,.14), transparent 28rem), var(--bg);
+  min-height:100vh;
+}
+header { padding: 30px 22px 18px; max-width: 1320px; margin: 0 auto; }
+h1 { margin:0; font-size: clamp(2rem, 5vw, 4.2rem); letter-spacing:-.06em; line-height:.96; }
+.subtitle { margin-top: 14px; color: var(--muted); font-size: 1.05rem; max-width: 900px; }
+.controls { display:flex; flex-wrap:wrap; gap:12px; margin-top:22px; align-items:center; }
+button, select, .navLink {
+  border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.1); color: var(--text);
+  padding: 11px 14px; border-radius: 999px; cursor: pointer; backdrop-filter: blur(10px);
+}
+select option { color:#07121f; }
+button.active, .primary { background: var(--gold); color: #1c1600; border-color: transparent; font-weight: 900; }
+.navLink { text-decoration:none; display:inline-flex; align-items:center; }
+main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
+.notice { margin: 16px 0 18px; background: rgba(255,209,102,.12); border:1px solid rgba(255,209,102,.26); border-radius: 22px; padding: 14px 16px; color: #ffe9a6; }
+.error { background:rgba(255,107,107,.13); border:1px solid rgba(255,107,107,.3); color:#ffc0c0; border-radius:20px; padding:14px 16px; margin:18px 0; }
+.loading { color:var(--muted); margin: 18px 0; }
+.stats { display:grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap:14px; margin:16px 0 22px; }
+.stat { background:var(--panel); border:1px solid rgba(255,255,255,.12); border-radius:22px; padding:16px; box-shadow:var(--shadow); }
+.stat small { color:var(--muted); display:block; } .stat strong { font-size:1.65rem; display:block; margin-top:4px; }
+.flag { width:42px; height:30px; border-radius:7px; overflow:hidden; background:rgba(255,255,255,.12); flex: 0 0 auto; border:1px solid rgba(255,255,255,.2); }
+.flag img { width:100%; height:100%; object-fit:cover; display:block; }
+.meta { color: var(--muted); font-size:.84rem; margin-top:3px; }
+.chip { background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.1); border-radius:999px; padding:6px 9px; display:inline-flex; align-items:center; gap:6px; }
+@media (max-width: 780px) { .stats { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 520px) { .stats { grid-template-columns:1fr; } }
+
+.matchList { display:grid; gap:14px; }
+.dateGroup { margin-top: 24px; }
+.dateTitle { font-size:1.2rem; font-weight:900; margin: 0 0 12px; color: var(--gold); }
+.match {
+  background: linear-gradient(145deg, rgba(255,255,255,.12), rgba(255,255,255,.055));
+  border:1px solid rgba(255,255,255,.14); border-radius: 24px; box-shadow:var(--shadow); padding: 16px;
+  display:grid; grid-template-columns: 1fr auto 1fr; gap:16px; align-items:center;
+}
+.team { display:flex; align-items:center; gap:10px; min-width:0; }
+.team.away { justify-content:flex-end; text-align:right; }
+.name { font-size:1.05rem; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.scoreBox { min-width: 150px; text-align:center; }
+.score { font-size:2rem; font-weight:1000; letter-spacing:-.04em; }
+.status { display:inline-block; margin-top:4px; padding:5px 9px; border-radius:999px; background:rgba(125,211,252,.14); border:1px solid rgba(125,211,252,.22); color:var(--blue); font-size:.78rem; font-weight:800; }
+.status.finished { background:rgba(45,212,191,.13); border-color:rgba(45,212,191,.28); color:var(--green); }
+.extra { grid-column: 1 / -1; border-top:1px solid rgba(255,255,255,.1); padding-top:12px; margin-top:2px; display:flex; flex-wrap:wrap; gap:10px; color:var(--muted); font-size:.9rem; }
+@media (max-width: 780px) {
+  .match { grid-template-columns: 1fr; text-align:center; }
+  .team, .team.away { justify-content:center; text-align:center; }
+  .scoreBox { order: 2; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>📅 Fixtures & Results</h1>
+  <div class="subtitle">This page reads your published Google Sheet fixtures CSV. Fill in Home Score, Away Score, Home RC and Away RC as matches finish.</div>
+  <div class="controls">
+    <a class="navLink" href="index.html">← Draw</a>
+    <a class="navLink" href="leaderboard.html">Leaderboard</a>
+    <button class="primary" id="refreshBtn">Refresh</button>
+    <select id="statusFilter">
+      <option value="all">All matches</option>
+      <option value="played">Played only</option>
+      <option value="unplayed">Unplayed only</option>
+    </select>
+    <select id="groupFilter"><option value="all">All groups</option></select>
+    <select id="teamFilter"><option value="all">All teams</option></select>
+  </div>
+</header>
+
+<main>
+  <div class="notice">
+    Replace <strong>FIXTURES_CSV_URL</strong> in this file with your published Google Sheet CSV link.
+  </div>
+
+  <section class="stats">
+    <div class="stat"><small>Total fixtures</small><strong id="statTotal">–</strong></div>
+    <div class="stat"><small>Played</small><strong id="statPlayed">–</strong></div>
+    <div class="stat"><small>Total goals</small><strong id="statGoals">–</strong></div>
+    <div class="stat"><small>Total red cards</small><strong id="statReds">–</strong></div>
+  </section>
+
+  <div id="message" class="loading">Loading fixtures…</div>
+  <section id="matches" class="matchList"></section>
+</main>
+
+<script>
+const FIXTURES_CSV_URL = "PASTE_FIXTURES_GOOGLE_SHEET_CSV_URL_HERE";
+
+const PLAYERS = [{"player": "Alex", "teams": ["England", "Iran", "Scotland", "Uzbekistan"]}, {"player": "Rhi", "teams": ["Croatia", "Australia", "Czechia", "Iraq"]}, {"player": "Mum", "teams": ["Morocco", "Mexico", "Sweden", "Jordan"]}, {"player": "Dad", "teams": ["Belgium", "Senegal", "Paraguay", "Curaçao"]}, {"player": "Ross", "teams": ["Spain", "Japan", "Norway", "Qatar"]}, {"player": "Poppy", "teams": ["Germany", "Uruguay", "Panama", "Haiti"]}, {"player": "Moyle", "teams": ["England", "South Korea", "DR Congo", "Curaçao"]}, {"player": "Matt", "teams": ["Portugal", "Japan", "Canada", "Cabo Verde"]}, {"player": "Pete", "teams": ["Brazil", "Switzerland", "Sweden", "Saudi Arabia"]}, {"player": "Kimbo", "teams": ["Germany", "Türkiye", "Algeria", "Cabo Verde"]}, {"player": "Ulan", "teams": ["Argentina", "Ecuador", "Egypt", "Ghana"]}, {"player": "A Jane", "teams": ["France", "Ecuador", "DR Congo", "South Africa"]}, {"player": "David", "teams": ["Belgium", "United States", "Canada", "Ghana"]}, {"player": "TT", "teams": ["Netherlands", "Uruguay", "Côte d’Ivoire", "Bosnia and Herzegovina"]}, {"player": "Jackie", "teams": ["Colombia", "Austria", "Tunisia", "New Zealand"]}];
+const TEAM_ALIASES = {"Korea Republic": "South Korea", "Korea Rep": "South Korea", "Korea Republic.": "South Korea", "USA": "United States", "United States of America": "United States", "Turkey": "Türkiye", "Turkiye": "Türkiye", "Ivory Coast": "Côte d’Ivoire", "Cote d'Ivoire": "Côte d’Ivoire", "Côte d'Ivoire": "Côte d’Ivoire", "Cote d’Ivoire": "Côte d’Ivoire", "Cape Verde": "Cabo Verde", "Curacao": "Curaçao", "DR Congo": "DR Congo", "Congo DR": "DR Congo", "Bosnia and Herzegovina": "Bosnia and Herzegovina", "Bosnia and Herz.": "Bosnia and Herzegovina", "Saudi Arabia": "Saudi Arabia"};
+const TEAM_FLAG_CODES = {"Argentina": "ar", "Australia": "au", "Austria": "at", "Belgium": "be", "Bosnia and Herzegovina": "ba", "Brazil": "br", "Cabo Verde": "cv", "Canada": "ca", "Colombia": "co", "Croatia": "hr", "Curaçao": "cw", "Czechia": "cz", "DR Congo": "cd", "Ecuador": "ec", "Egypt": "eg", "England": "gb-eng", "France": "fr", "Germany": "de", "Ghana": "gh", "Haiti": "ht", "Iran": "ir", "Iraq": "iq", "Japan": "jp", "Jordan": "jo", "Mexico": "mx", "Morocco": "ma", "Netherlands": "nl", "New Zealand": "nz", "Norway": "no", "Panama": "pa", "Paraguay": "py", "Portugal": "pt", "Qatar": "qa", "Saudi Arabia": "sa", "Scotland": "gb-sct", "Senegal": "sn", "South Africa": "za", "South Korea": "kr", "Spain": "es", "Sweden": "se", "Switzerland": "ch", "Tunisia": "tn", "Türkiye": "tr", "United States": "us", "Uruguay": "uy", "Uzbekistan": "uz", "Côte d’Ivoire": "ci", "Algeria": "dz"};
+
+function normaliseTeam(name) {
+  if (name === null || name === undefined) return "";
+  let n = String(name).trim();
+  n = n.replace(/\s+/g, " ");
+  return TEAM_ALIASES[n] || n;
+}
+
+function flagUrl(team) {
+  const code = TEAM_FLAG_CODES[normaliseTeam(team)];
+  return code ? `https://flagcdn.com/w80/${code}.png` : "";
+}
+
+function escapeHtml(str) {
+  return String(str ?? "").replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[s]));
+}
+
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = "", inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i], next = text[i+1];
+    if (c === '"' && inQuotes && next === '"') { field += '"'; i++; }
+    else if (c === '"') inQuotes = !inQuotes;
+    else if (c === ',' && !inQuotes) { row.push(field); field = ""; }
+    else if ((c === '\n' || c === '\r') && !inQuotes) {
+      if (c === '\r' && next === '\n') i++;
+      row.push(field); field = "";
+      if (row.some(v => String(v).trim() !== "")) rows.push(row);
+      row = [];
+    } else field += c;
+  }
+  row.push(field);
+  if (row.some(v => String(v).trim() !== "")) rows.push(row);
+  if (!rows.length) return [];
+  const headers = rows[0].map(h => h.trim());
+  return rows.slice(1).map(r => {
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (r[i] ?? "").trim());
+    return obj;
+  });
+}
+
+async function fetchCSV(url) {
+  if (!url || url.includes("PASTE_")) throw new Error("Missing Google Sheet CSV URL. Add your published CSV link inside this HTML file.");
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Could not fetch CSV: ${res.status}`);
+  const text = await res.text();
+  return parseCSV(text);
+}
+
+function getField(row, candidates) {
+  for (const c of candidates) {
+    if (row[c] !== undefined) return row[c];
+  }
+  const keys = Object.keys(row);
+  for (const c of candidates) {
+    const found = keys.find(k => k.toLowerCase().replace(/\s+/g,"") === c.toLowerCase().replace(/\s+/g,""));
+    if (found) return row[found];
+  }
+  return "";
+}
+
+function num(value) {
+  if (value === null || value === undefined || String(value).trim() === "") return null;
+  const n = Number(String(value).trim());
+  return Number.isFinite(n) ? n : null;
+}
+
+function formatDate(value) {
+  if (!value) return "TBC";
+  const d = new Date(value);
+  if (!isNaN(d)) return new Intl.DateTimeFormat("en-GB", {weekday:"short", day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit"}).format(d);
+  return value;
+}
+
+function dateHeading(value) {
+  if (!value) return "Date TBC";
+  const d = new Date(value);
+  if (!isNaN(d)) return new Intl.DateTimeFormat("en-GB", {weekday:"long", day:"2-digit", month:"long", year:"numeric"}).format(d);
+  return String(value).split(" ")[0];
+}
+
+function matchPlayed(match) {
+  return num(match.homeScore) !== null && num(match.awayScore) !== null;
+}
+
+function cleanSheetFor(match, side) {
+  if (!matchPlayed(match)) return false;
+  return side === "home" ? num(match.awayScore) === 0 : num(match.homeScore) === 0;
+}
+
+function scoreTeamInMatch(match, team) {
+  team = normaliseTeam(team);
+  const home = normaliseTeam(match.homeTeam);
+  const away = normaliseTeam(match.awayTeam);
+  if (team !== home && team !== away) return 0;
+
+  if (!matchPlayed(match)) return 0;
+
+  const isHome = team === home;
+  const goalsFor = isHome ? num(match.homeScore) : num(match.awayScore);
+  const goalsAgainst = isHome ? num(match.awayScore) : num(match.homeScore);
+  const reds = isHome ? (num(match.homeRC) ?? 0) : (num(match.awayRC) ?? 0);
+
+  let points = 0;
+  if (goalsFor > goalsAgainst) points += 3;
+  else if (goalsFor === goalsAgainst) points += 1;
+  if (goalsAgainst === 0) points += 2;
+  points += goalsFor;
+  points -= reds;
+  return points;
+}
+
+function parseMatches(rows) {
+  return rows.map(r => ({
+    matchNum: getField(r, ["Match Num","Match Number","Match"]),
+    roundNum: getField(r, ["Round Num","Round Number","Round"]),
+    date: getField(r, ["Date"]),
+    location: getField(r, ["Location","Venue","Stadium"]),
+    homeTeam: normaliseTeam(getField(r, ["Home Team","Home Team ","Home"])),
+    awayTeam: normaliseTeam(getField(r, ["Away Team","Away Team ","Away"])),
+    group: getField(r, ["Group"]),
+    homeScore: getField(r, ["Home Score","Home Goals","HG"]),
+    awayScore: getField(r, ["Away Score","Away Goals","AG"]),
+    homeRC: getField(r, ["Home RC","Home Red Cards","Home Reds"]),
+    awayRC: getField(r, ["Away RC","Away Red Cards","Away Reds"])
+  }));
+}
+
+function parseGroupRows(rows) {
+  const result = {};
+  rows.forEach(r => {
+    const team = normaliseTeam(getField(r, ["Team","Country"]));
+    if (!team) return;
+    const group = getField(r, ["Group"]);
+    const statusRaw = String(getField(r, ["Status","Group Status","Result","Position"])).toLowerCase();
+    const pos = num(getField(r, ["Position","Rank","Place"]));
+    const winner = String(getField(r, ["Group Winner","Winner","Top"])).toLowerCase();
+    const bottom = String(getField(r, ["Bottom Group","Bottom","Last"])).toLowerCase();
+
+    let groupBonus = 0;
+    if (pos === 1 || statusRaw.includes("winner") || statusRaw.includes("top") || ["yes","y","true","1"].includes(winner)) groupBonus = 2;
+    if (pos === 4 || statusRaw.includes("bottom") || statusRaw.includes("last") || ["yes","y","true","1"].includes(bottom)) groupBonus = -2;
+    result[team] = {group, groupBonus, raw:r};
+  });
+  return result;
+}
+
+
+const els = {
+  refreshBtn: document.getElementById("refreshBtn"),
+  statusFilter: document.getElementById("statusFilter"),
+  groupFilter: document.getElementById("groupFilter"),
+  teamFilter: document.getElementById("teamFilter"),
+  message: document.getElementById("message"),
+  matches: document.getElementById("matches"),
+  statTotal: document.getElementById("statTotal"),
+  statPlayed: document.getElementById("statPlayed"),
+  statGoals: document.getElementById("statGoals"),
+  statReds: document.getElementById("statReds")
+};
+let allMatches = [];
+
+async function loadFixtures() {
+  try {
+    showMessage("Loading fixtures from Google Sheet…");
+    const rows = await fetchCSV(FIXTURES_CSV_URL);
+    allMatches = parseMatches(rows);
+    populateFilters();
+    render();
+    showMessage(`Loaded ${allMatches.length} fixtures. Last refreshed ${new Intl.DateTimeFormat("en-GB", {dateStyle:"medium", timeStyle:"short"}).format(new Date())}.`);
+  } catch (err) {
+    showMessage(err.message, true);
+  }
+}
+
+function populateFilters() {
+  const groups = [...new Set(allMatches.map(m => m.group).filter(Boolean))].sort();
+  els.groupFilter.innerHTML = `<option value="all">All groups</option>` + groups.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join("");
+
+  const teams = new Set();
+  allMatches.forEach(m => { if (m.homeTeam) teams.add(m.homeTeam); if (m.awayTeam) teams.add(m.awayTeam); });
+  els.teamFilter.innerHTML = `<option value="all">All teams</option>` + [...teams].sort().map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
+}
+
+function filteredMatches() {
+  const status = els.statusFilter.value, group = els.groupFilter.value, team = els.teamFilter.value;
+  return allMatches.filter(m => {
+    const played = matchPlayed(m);
+    return (status === "all" || (status === "played" && played) || (status === "unplayed" && !played))
+      && (group === "all" || m.group === group)
+      && (team === "all" || m.homeTeam === team || m.awayTeam === team);
+  }).sort((a,b) => {
+    const da = new Date(a.date), db = new Date(b.date);
+    if (!isNaN(da) && !isNaN(db)) return da - db;
+    return Number(a.matchNum || 0) - Number(b.matchNum || 0);
+  });
+}
+
+function render() {
+  renderStats();
+  const matches = filteredMatches();
+  if (!matches.length) {
+    els.matches.innerHTML = `<div class="notice">No fixtures match your filters.</div>`;
+    return;
+  }
+  const grouped = new Map();
+  matches.forEach(m => {
+    const key = dateHeading(m.date);
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key).push(m);
+  });
+  els.matches.innerHTML = [...grouped.entries()].map(([date, ms]) => `
+    <div class="dateGroup">
+      <h2 class="dateTitle">${escapeHtml(date)}</h2>
+      ${ms.map(renderMatch).join("")}
+    </div>
+  `).join("");
+}
+
+function renderStats() {
+  const played = allMatches.filter(matchPlayed);
+  const goals = played.reduce((n,m)=>n+(num(m.homeScore)||0)+(num(m.awayScore)||0),0);
+  const reds = allMatches.reduce((n,m)=>n+(num(m.homeRC)||0)+(num(m.awayRC)||0),0);
+  els.statTotal.textContent = allMatches.length;
+  els.statPlayed.textContent = played.length;
+  els.statGoals.textContent = goals;
+  els.statReds.textContent = reds;
+}
+
+function renderMatch(m) {
+  const played = matchPlayed(m);
+  const score = played ? `${num(m.homeScore)} - ${num(m.awayScore)}` : "v";
+  const status = played ? "Result entered" : "Awaiting result";
+  const homeRed = num(m.homeRC) || 0, awayRed = num(m.awayRC) || 0;
+  return `
+    <article class="match">
+      <div class="team">
+        <span class="flag">${flagUrl(m.homeTeam) ? `<img src="${flagUrl(m.homeTeam)}" alt="">` : ""}</span>
+        <div><div class="name">${escapeHtml(m.homeTeam || "TBC")}</div><div class="meta">Home</div></div>
+      </div>
+      <div class="scoreBox">
+        <div class="score">${score}</div>
+        <div class="status ${played ? "finished" : ""}">${status}</div>
+        <div class="meta">${escapeHtml(formatDate(m.date))}</div>
+      </div>
+      <div class="team away">
+        <div><div class="name">${escapeHtml(m.awayTeam || "TBC")}</div><div class="meta">Away</div></div>
+        <span class="flag">${flagUrl(m.awayTeam) ? `<img src="${flagUrl(m.awayTeam)}" alt="">` : ""}</span>
+      </div>
+      <div class="extra">
+        <span class="chip">Match ${escapeHtml(m.matchNum)}</span>
+        <span class="chip">${escapeHtml(m.group)}</span>
+        <span class="chip">${escapeHtml(m.location)}</span>
+        <span class="chip">Home RC: ${homeRed}</span>
+        <span class="chip">Away RC: ${awayRed}</span>
+      </div>
+    </article>
+  `;
+}
+
+function showMessage(msg, isError=false) {
+  els.message.className = isError ? "error" : "loading";
+  els.message.textContent = msg;
+}
+
+els.refreshBtn.addEventListener("click", loadFixtures);
+els.statusFilter.addEventListener("change", render);
+els.groupFilter.addEventListener("change", render);
+els.teamFilter.addEventListener("change", render);
+loadFixtures();
+</script>
+</body>
+</html>
