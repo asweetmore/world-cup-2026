@@ -3,106 +3,326 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sweetmore's World Cup Sweepstake - v4</title>
+<title>Sweetmore's World Cup Sweepstake</title>
 <style>
 :root {
-  --bg: #07121f; --panel: rgba(255,255,255,.08); --text: #eef6ff; --muted: #a9bfd6;
-  --gold: #ffd166; --green: #2dd4bf; --shadow: 0 18px 50px rgba(0,0,0,.35);
-  --land: #74d3ae; --land2:#3fa983; --ocean:#0a2a44;
+  --bg: #07121f;
+  --panel: rgba(255,255,255,.08);
+  --panel2: rgba(255,255,255,.12);
+  --text: #eef6ff;
+  --muted: #a9bfd6;
+  --gold: #ffd166;
+  --green: #2dd4bf;
+  --blue: #7dd3fc;
+  --shadow: 0 18px 50px rgba(0,0,0,.35);
 }
 * { box-sizing: border-box; }
 body {
-  margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: var(--text);
   background:
     radial-gradient(circle at top left, rgba(45,212,191,.24), transparent 34rem),
     radial-gradient(circle at 80% 15%, rgba(125,211,252,.22), transparent 32rem),
-    radial-gradient(circle at bottom right, rgba(255,209,102,.14), transparent 28rem), var(--bg);
+    radial-gradient(circle at bottom right, rgba(255,209,102,.14), transparent 28rem),
+    var(--bg);
   min-height: 100vh;
 }
-header { padding: 30px 22px 18px; max-width: 1320px; margin: 0 auto; }
-h1 { margin: 0; font-size: clamp(2rem, 5vw, 4.8rem); letter-spacing: -0.06em; line-height: .95; }
-.subtitle { margin-top: 14px; color: var(--muted); font-size: 1.05rem; max-width: 860px; }
-.controls { display:flex; flex-wrap:wrap; gap:12px; margin-top:22px; align-items:center; }
+header {
+  padding: 30px 22px 18px;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 4.8rem);
+  letter-spacing: -0.06em;
+  line-height: .95;
+}
+.subtitle {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 1.05rem;
+  max-width: 860px;
+}
+.controls {
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-top:22px;
+  align-items:center;
+}
 button, select, .navLink {
-  border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.1); color: var(--text);
-  padding: 11px 14px; border-radius: 999px; cursor: pointer; backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.1);
+  color: var(--text);
+  padding: 11px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
 }
 select option { color: #07121f; }
-button.active { background: var(--gold); color: #1c1600; border-color: transparent; font-weight: 800; }
+button.active {
+  background: var(--gold);
+  color: #1c1600;
+  border-color: transparent;
+  font-weight: 800;
+}
 .navLink { text-decoration: none; display: inline-flex; align-items: center; }
-main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
+main {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 22px 44px;
+}
 .page { display:none; }
 .page.active { display:block; }
-.stats { display:grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap:14px; margin:16px 0 22px; }
-.stat { background:var(--panel); border:1px solid rgba(255,255,255,.12); border-radius:22px; padding:16px; box-shadow:var(--shadow); }
-.stat small { color:var(--muted); display:block; } .stat strong { font-size:1.8rem; display:block; margin-top:4px; }
-.layout { display:grid; grid-template-columns: 1fr 390px; gap:18px; }
-.grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:16px; }
-.card { position:relative; overflow:hidden; background:linear-gradient(145deg, rgba(255,255,255,.12), rgba(255,255,255,.055)); border:1px solid rgba(255,255,255,.14); border-radius:26px; padding:18px; box-shadow:var(--shadow); min-height:278px; }
-.card::before { content:""; position:absolute; inset:-2px; background:radial-gradient(circle at 20% 0%, rgba(255,209,102,.17), transparent 15rem); pointer-events:none; }
-.card-top { display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; }
-.player { font-size:1.45rem; font-weight:900; letter-spacing:-.03em; }
-.rank-score { font-size:.85rem; color:var(--muted); text-align:right; } .rank-score strong { color:var(--gold); font-size:1.35rem; }
-.teams { display:grid; gap:9px; margin-top:16px; position:relative; z-index:1; }
-.team { display:grid; grid-template-columns:46px 1fr auto; gap:10px; align-items:center; background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.1); border-radius:16px; padding:10px; }
-.flagbox { height:34px; width:44px; display:grid; place-items:center; background:rgba(255,255,255,.1); border-radius:10px; overflow:hidden; box-shadow:0 5px 12px rgba(0,0,0,.25); }
-.flagbox img { width:44px; height:32px; object-fit:cover; display:block; } .flagbox .fallback { display:none; font-size:1.3rem; }
-.team-name { font-weight:800; } .meta { color:var(--muted); font-size:.82rem; margin-top:2px; }
-.pill { font-size:.78rem; padding:5px 8px; border-radius:999px; background:rgba(125,211,252,.13); border:1px solid rgba(125,211,252,.2); white-space:nowrap; }
-.side { position:sticky; top:12px; align-self:start; display:grid; gap:16px; }
-.panel { background:var(--panel); border:1px solid rgba(255,255,255,.12); border-radius:26px; padding:16px; box-shadow:var(--shadow); }
+.stats {
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap:14px;
+  margin:16px 0 22px;
+}
+.stat {
+  background:var(--panel);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:22px;
+  padding:16px;
+  box-shadow:var(--shadow);
+}
+.stat small { color:var(--muted); display:block; }
+.stat strong { font-size:1.8rem; display:block; margin-top:4px; }
+.layout {
+  display:grid;
+  grid-template-columns: 1fr 390px;
+  gap:18px;
+}
+.grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap:16px;
+}
+.card {
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(145deg, rgba(255,255,255,.12), rgba(255,255,255,.055));
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:26px;
+  padding:18px;
+  box-shadow:var(--shadow);
+  min-height:278px;
+}
+.card::before {
+  content:"";
+  position:absolute;
+  inset:-2px;
+  background:radial-gradient(circle at 20% 0%, rgba(255,209,102,.17), transparent 15rem);
+  pointer-events:none;
+}
+.card-top {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:relative;
+  z-index:1;
+}
+.player {
+  font-size:1.45rem;
+  font-weight:900;
+  letter-spacing:-.03em;
+}
+.rank-score {
+  font-size:.85rem;
+  color:var(--muted);
+  text-align:right;
+}
+.rank-score strong {
+  color:var(--gold);
+  font-size:1.35rem;
+}
+.teams {
+  display:grid;
+  gap:9px;
+  margin-top:16px;
+  position:relative;
+  z-index:1;
+}
+.team {
+  display:grid;
+  grid-template-columns:46px 1fr auto;
+  gap:10px;
+  align-items:center;
+  background:rgba(0,0,0,.18);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:16px;
+  padding:10px;
+}
+.flagbox {
+  height:34px;
+  width:44px;
+  display:grid;
+  place-items:center;
+  background:rgba(255,255,255,.1);
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:0 5px 12px rgba(0,0,0,.25);
+}
+.flagbox img {
+  width:44px;
+  height:32px;
+  object-fit:cover;
+  display:block;
+}
+.flagbox .fallback { display:none; font-size:1.3rem; }
+.team-name { font-weight:800; }
+.meta { color:var(--muted); font-size:.82rem; margin-top:2px; }
+.pill {
+  font-size:.78rem;
+  padding:5px 8px;
+  border-radius:999px;
+  background:rgba(125,211,252,.13);
+  border:1px solid rgba(125,211,252,.2);
+  white-space:nowrap;
+}
+.side {
+  position:sticky;
+  top:12px;
+  align-self:start;
+  display:grid;
+  gap:16px;
+}
+.panel {
+  background:var(--panel);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:26px;
+  padding:16px;
+  box-shadow:var(--shadow);
+}
 .panel h2 { margin:0 0 12px; font-size:1.05rem; }
-.leader { display:grid; gap:8px; max-height:600px; overflow:auto; padding-right:3px; }
-.leader-row { display:grid; grid-template-columns:28px 1fr auto; gap:8px; align-items:center; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.08); }
-.badge { width:24px; height:24px; border-radius:50%; display:grid; place-items:center; background:rgba(255,255,255,.1); color:var(--muted); font-size:.78rem; }
-.leader-row:nth-child(1) .badge { background:var(--gold); color:#1b1300; font-weight:900; }
+.leader {
+  display:grid;
+  gap:8px;
+  max-height:600px;
+  overflow:auto;
+  padding-right:3px;
+}
+.leader-row {
+  display:grid;
+  grid-template-columns:28px 1fr auto;
+  gap:8px;
+  align-items:center;
+  padding:9px 0;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.badge {
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:rgba(255,255,255,.1);
+  color:var(--muted);
+  font-size:.78rem;
+}
+.leader-row:nth-child(1) .badge {
+  background:var(--gold);
+  color:#1b1300;
+  font-weight:900;
+}
 .footer-note { color:var(--muted); font-size:.84rem; margin-top:14px; }
-
-/* Full World Map page - bold visible base map */
 .mapToolbar {
-  display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin: 16px 0;
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  align-items:center;
+  margin: 16px 0;
 }
 .bigMapCard {
-  position:relative; height: calc(100vh - 215px); min-height: 560px; width:100%;
+  position:relative;
+  height: calc(100vh - 215px);
+  min-height: 560px;
+  width:100%;
   background: linear-gradient(180deg, #0f5f8c 0%, #073453 100%);
-  border:1px solid rgba(255,255,255,.16); border-radius: 30px; overflow:hidden; box-shadow:var(--shadow);
+  border:1px solid rgba(255,255,255,.16);
+  border-radius: 30px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
 }
-.bigMap {
-  position:absolute; inset:0; width:100%; height:100%;
-}
-.graticule { stroke:rgba(255,255,255,.16); stroke-width:.7; fill:none; }
-.land {
-  fill: #74d3ae;
-  stroke: rgba(255,255,255,.65);
-  stroke-width: 1.1;
-}
-.landShade { fill: #3fa983; opacity:.78; }
+.bigMap { position:absolute; inset:0; width:100%; height:100%; }
 .label {
-  fill: rgba(255,255,255,.36); font-size: 14px; font-weight: 800; letter-spacing: .08em;
-  text-anchor: middle; pointer-events:none;
+  fill: rgba(255,255,255,.36);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-anchor: middle;
+  pointer-events:none;
 }
 .mapPin {
-  position:absolute; transform:translate(-50%,-50%); z-index:5;
-  width:34px; height:25px; border-radius:6px; cursor:pointer;
+  position:absolute;
+  transform:translate(-50%,-50%);
+  z-index:5;
+  width:34px;
+  height:25px;
+  border-radius:6px;
+  cursor:pointer;
   filter: drop-shadow(0 7px 7px rgba(0,0,0,.68));
   transition: transform .14s ease, z-index .14s ease;
 }
 .mapPin:hover { transform:translate(-50%,-50%) scale(1.55); z-index:30; }
-.mapPin img { width:34px; height:25px; object-fit:cover; border-radius:5px; border:2px solid rgba(255,255,255,.7); background:white; }
+.mapPin img {
+  width:34px;
+  height:25px;
+  object-fit:cover;
+  border-radius:5px;
+  border:2px solid rgba(255,255,255,.7);
+  background:white;
+}
 .mapPin::after {
-  content: attr(data-label); position:absolute; left:50%; bottom:140%; transform:translateX(-50%);
-  background:rgba(0,0,0,.86); color:white; padding:7px 9px; border-radius:10px; font-size:.78rem; white-space:nowrap;
-  opacity:0; pointer-events:none; transition:opacity .12s ease;
+  content: attr(data-label);
+  position:absolute;
+  left:50%;
+  bottom:140%;
+  transform:translateX(-50%);
+  background:rgba(0,0,0,.86);
+  color:white;
+  padding:7px 9px;
+  border-radius:10px;
+  font-size:.78rem;
+  white-space:nowrap;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .12s ease;
 }
 .mapPin:hover::after { opacity:1; }
 .mapLegend {
-  position:absolute; left:18px; bottom:18px; z-index:10; background:rgba(0,0,0,.45);
-  border:1px solid rgba(255,255,255,.18); border-radius:16px; padding:12px 14px; backdrop-filter: blur(8px);
+  position:absolute;
+  left:18px;
+  bottom:18px;
+  z-index:10;
+  background:rgba(0,0,0,.45);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:16px;
+  padding:12px 14px;
+  backdrop-filter: blur(8px);
 }
-.mapLegend strong { display:block; margin-bottom:4px; } .mapLegend span { color:var(--muted); font-size:.9rem; }
-@media (max-width:960px) { .layout { grid-template-columns:1fr; } .side { position:static; } .stats { grid-template-columns:repeat(2,1fr); } .bigMapCard { height: 72vh; min-height: 520px; } }
-@media (max-width:560px) { .stats { grid-template-columns:1fr; } .bigMapCard { min-height: 500px; border-radius:22px; } }
+.mapLegend strong { display:block; margin-bottom:4px; }
+.mapLegend span { color:var(--muted); font-size:.9rem; }
+.notice {
+  margin: 16px 0;
+  background: rgba(255,209,102,.12);
+  border:1px solid rgba(255,209,102,.26);
+  border-radius: 22px;
+  padding: 14px 16px;
+  color: #ffe9a6;
+}
+@media (max-width:960px) {
+  .layout { grid-template-columns:1fr; }
+  .side { position:static; }
+  .stats { grid-template-columns:1fr; }
+  .bigMapCard { height: 72vh; min-height: 520px; }
+}
+@media (max-width:560px) {
+  .bigMapCard { min-height: 500px; border-radius:22px; }
+}
 </style>
 </head>
 <body>
@@ -124,8 +344,8 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
 <main>
   <section id="drawPage" class="page active">
     <section class="stats">
-      <div class="stat"><small>Players</small><strong id="statPlayers">15</strong></div>
-      <div class="stat"><small>Teams drawn</small><strong id="statTeams">60</strong></div>
+      <div class="stat"><small>Players</small><strong id="statPlayers">–</strong></div>
+      <div class="stat"><small>Teams drawn</small><strong id="statTeams">–</strong></div>
     </section>
 
     <div class="layout">
@@ -158,47 +378,28 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
           </filter>
         </defs>
         <rect width="1000" height="500" fill="url(#oceanGradV4)"></rect>
-
-        <!-- grid -->
         <path d="M0 125H1000M0 250H1000M0 375H1000M125 0V500M250 0V500M375 0V500M500 0V500M625 0V500M750 0V500M875 0V500"
               fill="none" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
-
-        <!-- North America -->
         <path filter="url(#landShadow)" fill="#7ee0b8" stroke="rgba(255,255,255,.75)" stroke-width="1.4"
               d="M95,86 C140,40 236,36 312,68 C376,95 400,150 363,189 C334,219 286,207 262,238 C240,267 268,300 229,330 C181,366 126,305 103,248 C77,183 51,132 95,86 Z"/>
         <path fill="#43aa82" opacity=".85"
               d="M165,120 C215,88 290,92 334,132 C292,129 255,152 230,190 C200,173 161,162 165,120 Z"/>
-        <!-- Greenland -->
         <path filter="url(#landShadow)" fill="#8fe8c4" stroke="rgba(255,255,255,.75)" stroke-width="1.2"
               d="M386,30 C427,9 489,12 535,39 C500,67 438,67 386,30 Z"/>
-        <!-- South America -->
         <path filter="url(#landShadow)" fill="#7ee0b8" stroke="rgba(255,255,255,.75)" stroke-width="1.4"
               d="M292,285 C338,254 392,274 410,322 C436,391 373,461 316,438 C265,417 240,345 292,285 Z"/>
-        <path fill="#43aa82" opacity=".85"
-              d="M325,318 C359,318 385,348 381,389 C354,374 330,361 307,338 C310,329 315,322 325,318 Z"/>
-        <!-- Europe / Asia mass -->
         <path filter="url(#landShadow)" fill="#7ee0b8" stroke="rgba(255,255,255,.75)" stroke-width="1.4"
               d="M421,94 C490,45 596,51 670,89 C724,117 746,157 721,196 C691,243 612,207 557,221 C503,235 456,224 421,190 C384,154 385,121 421,94 Z"/>
-        <!-- Asia extension -->
         <path filter="url(#landShadow)" fill="#7ee0b8" stroke="rgba(255,255,255,.75)" stroke-width="1.4"
               d="M622,98 C706,52 836,66 902,139 C967,211 893,282 795,254 C730,236 707,191 639,198 C589,203 578,128 622,98 Z"/>
-        <path fill="#43aa82" opacity=".85"
-              d="M706,128 C770,105 858,133 884,181 C835,166 784,174 744,201 C706,175 682,151 706,128 Z"/>
-        <!-- Africa -->
         <path filter="url(#landShadow)" fill="#7ee0b8" stroke="rgba(255,255,255,.75)" stroke-width="1.4"
               d="M480,224 C545,199 615,231 654,291 C696,358 646,438 571,422 C518,411 514,354 477,324 C431,288 432,246 480,224 Z"/>
-        <path fill="#43aa82" opacity=".85"
-              d="M522,260 C563,245 609,269 628,316 C606,318 578,338 568,380 C535,350 510,311 522,260 Z"/>
-        <!-- Australia -->
         <path filter="url(#landShadow)" fill="#7ee0b8" stroke="rgba(255,255,255,.75)" stroke-width="1.4"
               d="M772,320 C835,285 916,311 935,360 C956,415 889,455 820,431 C760,410 729,345 772,320 Z"/>
-        <!-- New Zealand -->
         <path filter="url(#landShadow)" fill="#7ee0b8" stroke="rgba(255,255,255,.75)" stroke-width="1.1"
               d="M944,405 C958,397 971,404 974,418 C958,423 948,420 944,405 Z"/>
         <path filter="url(#landShadow)" fill="#7ee0b8" stroke="rgba(255,255,255,.75)" stroke-width="1.1"
               d="M970,431 C986,423 997,431 996,446 C980,449 970,444 970,431 Z"/>
-
-        <!-- Labels -->
         <text class="label" x="210" y="236">NORTH AMERICA</text>
         <text class="label" x="338" y="365">SOUTH AMERICA</text>
         <text class="label" x="520" y="168">EUROPE</text>
@@ -208,53 +409,182 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
       </svg>
       <div class="mapLegend">
         <strong id="mapTitle">All players</strong>
-        <span id="mapSub">Showing 60 flags. Hover a flag for team, owner, group and pot.</span>
+        <span id="mapSub">Showing flags. Hover a flag for team, owner, group and pot.</span>
       </div>
     </div>
   </section>
 </main>
 
 <script>
-const players = [{"player": "Alex", "teams": [{"team": "England", "code": "gb-eng", "emoji": "🏴", "group": "L", "pot": 1, "rank": 4, "lat": 52.35, "lon": -1.17}, {"team": "Iran", "code": "ir", "emoji": "🇮🇷", "group": "G", "pot": 2, "rank": 19, "lat": 32.43, "lon": 53.69}, {"team": "Scotland", "code": "gb-sct", "emoji": "🏴", "group": "C", "pot": 3, "rank": 34, "lat": 56.49, "lon": -4.2}, {"team": "Uzbekistan", "code": "uz", "emoji": "🇺🇿", "group": "K", "pot": 4, "rank": 37, "lat": 41.38, "lon": 64.59}], "totalRank": 94}, {"player": "Rhi", "teams": [{"team": "Croatia", "code": "hr", "emoji": "🇭🇷", "group": "L", "pot": 1, "rank": 11, "lat": 45.1, "lon": 15.2}, {"team": "Australia", "code": "au", "emoji": "🇦🇺", "group": "D", "pot": 2, "rank": 24, "lat": -25.27, "lon": 133.78}, {"team": "Czechia", "code": "cz", "emoji": "🇨🇿", "group": "A", "pot": 3, "rank": 33, "lat": 49.82, "lon": 15.47}, {"team": "Iraq", "code": "iq", "emoji": "🇮🇶", "group": "I", "pot": 4, "rank": 39, "lat": 33.22, "lon": 43.68}], "totalRank": 107}, {"player": "Mum", "teams": [{"team": "Morocco", "code": "ma", "emoji": "🇲🇦", "group": "C", "pot": 1, "rank": 8, "lat": 31.79, "lon": -7.09}, {"team": "Mexico", "code": "mx", "emoji": "🇲🇽", "group": "A", "pot": 2, "rank": 14, "lat": 23.63, "lon": -102.55}, {"team": "Sweden", "code": "se", "emoji": "🇸🇪", "group": "F", "pot": 3, "rank": 31, "lat": 60.13, "lon": 18.64}, {"team": "Jordan", "code": "jo", "emoji": "🇯🇴", "group": "J", "pot": 4, "rank": 42, "lat": 30.59, "lon": 36.24}], "totalRank": 95}, {"player": "Dad", "teams": [{"team": "Belgium", "code": "be", "emoji": "🇧🇪", "group": "G", "pot": 1, "rank": 9, "lat": 50.5, "lon": 4.47}, {"team": "Senegal", "code": "sn", "emoji": "🇸🇳", "group": "I", "pot": 2, "rank": 13, "lat": 14.5, "lon": -14.45}, {"team": "Paraguay", "code": "py", "emoji": "🇵🇾", "group": "D", "pot": 3, "rank": 32, "lat": -23.44, "lon": -58.44}, {"team": "Curaçao", "code": "cw", "emoji": "🇨🇼", "group": "E", "pot": 4, "rank": 46, "lat": 12.17, "lon": -68.99}], "totalRank": 100}, {"player": "Ross", "teams": [{"team": "Spain", "code": "es", "emoji": "🇪🇸", "group": "H", "pot": 1, "rank": 2, "lat": 40.46, "lon": -3.75}, {"team": "Japan", "code": "jp", "emoji": "🇯🇵", "group": "F", "pot": 2, "rank": 17, "lat": 36.2, "lon": 138.25}, {"team": "Norway", "code": "no", "emoji": "🇳🇴", "group": "I", "pot": 3, "rank": 28, "lat": 60.47, "lon": 8.47}, {"team": "Qatar", "code": "qa", "emoji": "🇶🇦", "group": "B", "pot": 4, "rank": 38, "lat": 25.35, "lon": 51.18}], "totalRank": 85}, {"player": "Poppy", "teams": [{"team": "Germany", "code": "de", "emoji": "🇩🇪", "group": "E", "pot": 1, "rank": 10, "lat": 51.17, "lon": 10.45}, {"team": "Uruguay", "code": "uy", "emoji": "🇺🇾", "group": "H", "pot": 2, "rank": 16, "lat": -32.52, "lon": -55.77}, {"team": "Panama", "code": "pa", "emoji": "🇵🇦", "group": "L", "pot": 3, "rank": 29, "lat": 8.54, "lon": -80.78}, {"team": "Haiti", "code": "ht", "emoji": "🇭🇹", "group": "C", "pot": 4, "rank": 47, "lat": 18.97, "lon": -72.29}], "totalRank": 102}, {"player": "Moyle", "teams": [{"team": "England", "code": "gb-eng", "emoji": "🏴", "group": "L", "pot": 1, "rank": 4, "lat": 52.35, "lon": -1.17}, {"team": "South Korea", "code": "kr", "emoji": "🇰🇷", "group": "A", "pot": 2, "rank": 23, "lat": 35.91, "lon": 127.77}, {"team": "DR Congo", "code": "cd", "emoji": "🇨🇩", "group": "K", "pot": 3, "rank": 36, "lat": -4.04, "lon": 21.76}, {"team": "Curaçao", "code": "cw", "emoji": "🇨🇼", "group": "E", "pot": 4, "rank": 46, "lat": 12.17, "lon": -68.99}], "totalRank": 109}, {"player": "Matt", "teams": [{"team": "Portugal", "code": "pt", "emoji": "🇵🇹", "group": "K", "pot": 1, "rank": 5, "lat": 39.4, "lon": -8.22}, {"team": "Japan", "code": "jp", "emoji": "🇯🇵", "group": "F", "pot": 2, "rank": 17, "lat": 36.2, "lon": 138.25}, {"team": "Canada", "code": "ca", "emoji": "🇨🇦", "group": "B", "pot": 3, "rank": 27, "lat": 56.13, "lon": -106.35}, {"team": "Cabo Verde", "code": "cv", "emoji": "🇨🇻", "group": "H", "pot": 4, "rank": 44, "lat": 16.0, "lon": -24.01}], "totalRank": 93}, {"player": "Pete", "teams": [{"team": "Brazil", "code": "br", "emoji": "🇧🇷", "group": "C", "pot": 1, "rank": 6, "lat": -14.24, "lon": -51.93}, {"team": "Switzerland", "code": "ch", "emoji": "🇨🇭", "group": "B", "pot": 2, "rank": 18, "lat": 46.82, "lon": 8.23}, {"team": "Sweden", "code": "se", "emoji": "🇸🇪", "group": "F", "pot": 3, "rank": 31, "lat": 60.13, "lon": 18.64}, {"team": "Saudi Arabia", "code": "sa", "emoji": "🇸🇦", "group": "H", "pot": 4, "rank": 41, "lat": 23.89, "lon": 45.08}], "totalRank": 96}, {"player": "Kimbo", "teams": [{"team": "Germany", "code": "de", "emoji": "🇩🇪", "group": "E", "pot": 1, "rank": 10, "lat": 51.17, "lon": 10.45}, {"team": "Türkiye", "code": "tr", "emoji": "🇹🇷", "group": "D", "pot": 2, "rank": 20, "lat": 38.96, "lon": 35.24}, {"team": "Algeria", "code": "dz", "emoji": "🇩🇿", "group": "J", "pot": 3, "rank": 25, "lat": 28.03, "lon": 1.66}, {"team": "Cabo Verde", "code": "cv", "emoji": "🇨🇻", "group": "H", "pot": 4, "rank": 44, "lat": 16.0, "lon": -24.01}], "totalRank": 99}, {"player": "Ulan", "teams": [{"team": "Argentina", "code": "ar", "emoji": "🇦🇷", "group": "J", "pot": 1, "rank": 3, "lat": -38.42, "lon": -63.62}, {"team": "Ecuador", "code": "ec", "emoji": "🇪🇨", "group": "E", "pot": 2, "rank": 21, "lat": -1.83, "lon": -78.18}, {"team": "Egypt", "code": "eg", "emoji": "🇪🇬", "group": "G", "pot": 3, "rank": 26, "lat": 26.82, "lon": 30.8}, {"team": "Ghana", "code": "gh", "emoji": "🇬🇭", "group": "L", "pot": 4, "rank": 45, "lat": 7.95, "lon": -1.02}], "totalRank": 95}, {"player": "A Jane", "teams": [{"team": "France", "code": "fr", "emoji": "🇫🇷", "group": "I", "pot": 1, "rank": 1, "lat": 46.23, "lon": 2.21}, {"team": "Ecuador", "code": "ec", "emoji": "🇪🇨", "group": "E", "pot": 2, "rank": 21, "lat": -1.83, "lon": -78.18}, {"team": "DR Congo", "code": "cd", "emoji": "🇨🇩", "group": "K", "pot": 3, "rank": 36, "lat": -4.04, "lon": 21.76}, {"team": "South Africa", "code": "za", "emoji": "🇿🇦", "group": "A", "pot": 4, "rank": 40, "lat": -30.56, "lon": 22.94}], "totalRank": 98}, {"player": "David", "teams": [{"team": "Belgium", "code": "be", "emoji": "🇧🇪", "group": "G", "pot": 1, "rank": 9, "lat": 50.5, "lon": 4.47}, {"team": "United States", "code": "us", "emoji": "🇺🇸", "group": "D", "pot": 2, "rank": 15, "lat": 37.09, "lon": -95.71}, {"team": "Canada", "code": "ca", "emoji": "🇨🇦", "group": "B", "pot": 3, "rank": 27, "lat": 56.13, "lon": -106.35}, {"team": "Ghana", "code": "gh", "emoji": "🇬🇭", "group": "L", "pot": 4, "rank": 45, "lat": 7.95, "lon": -1.02}], "totalRank": 96}, {"player": "TT", "teams": [{"team": "Netherlands", "code": "nl", "emoji": "🇳🇱", "group": "F", "pot": 1, "rank": 7, "lat": 52.13, "lon": 5.29}, {"team": "Uruguay", "code": "uy", "emoji": "🇺🇾", "group": "H", "pot": 2, "rank": 16, "lat": -32.52, "lon": -55.77}, {"team": "Côte d’Ivoire", "code": "ci", "emoji": "🇨🇮", "group": "E", "pot": 3, "rank": 30, "lat": 7.54, "lon": -5.55}, {"team": "Bosnia and Herzegovina", "code": "ba", "emoji": "🇧🇦", "group": "B", "pot": 4, "rank": 43, "lat": 43.92, "lon": 17.68}], "totalRank": 96}, {"player": "Jackie", "teams": [{"team": "Colombia", "code": "co", "emoji": "🇨🇴", "group": "K", "pot": 1, "rank": 12, "lat": 4.57, "lon": -74.3}, {"team": "Austria", "code": "at", "emoji": "🇦🇹", "group": "J", "pot": 2, "rank": 22, "lat": 47.52, "lon": 14.55}, {"team": "Tunisia", "code": "tn", "emoji": "🇹🇳", "group": "F", "pot": 3, "rank": 35, "lat": 33.89, "lon": 9.54}, {"team": "New Zealand", "code": "nz", "emoji": "🇳🇿", "group": "G", "pot": 4, "rank": 48, "lat": -40.9, "lon": 174.89}], "totalRank": 117}];
+const PLAYERS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSJ7Xz9f4blVUNfJiUNlIHfUXqvJfCf-6-Ai5IErYs_j4UMxXdjcouXQ-D9hc4hgL0jx9-jvtMKm6L3/pub?output=csv";
+
+const TEAM_ALIASES = {
+  "Korea Republic": "South Korea",
+  "Korea Rep": "South Korea",
+  "Korea Rep.": "South Korea",
+  "USA": "United States",
+  "United States of America": "United States",
+  "Turkey": "Türkiye",
+  "Turkiye": "Türkiye",
+  "Ivory Coast": "Côte d’Ivoire",
+  "Cote d'Ivoire": "Côte d’Ivoire",
+  "Côte d'Ivoire": "Côte d’Ivoire",
+  "Cote d’Ivoire": "Côte d’Ivoire",
+  "Cape Verde": "Cabo Verde",
+  "Curacao": "Curaçao",
+  "Congo DR": "DR Congo",
+  "Bosnia and Herz.": "Bosnia and Herzegovina"
+};
+
+const TEAM_META = {
+  "France": {code:"fr", group:"I", pot:1, rank:1, lat:46.23, lon:2.21},
+  "Spain": {code:"es", group:"H", pot:1, rank:2, lat:40.46, lon:-3.75},
+  "Argentina": {code:"ar", group:"J", pot:1, rank:3, lat:-38.42, lon:-63.62},
+  "England": {code:"gb-eng", group:"L", pot:1, rank:4, lat:52.35, lon:-1.17},
+  "Portugal": {code:"pt", group:"K", pot:1, rank:5, lat:39.40, lon:-8.22},
+  "Brazil": {code:"br", group:"C", pot:1, rank:6, lat:-14.24, lon:-51.93},
+  "Netherlands": {code:"nl", group:"F", pot:1, rank:7, lat:52.13, lon:5.29},
+  "Morocco": {code:"ma", group:"C", pot:1, rank:8, lat:31.79, lon:-7.09},
+  "Belgium": {code:"be", group:"G", pot:1, rank:9, lat:50.50, lon:4.47},
+  "Germany": {code:"de", group:"E", pot:1, rank:10, lat:51.17, lon:10.45},
+  "Croatia": {code:"hr", group:"L", pot:1, rank:11, lat:45.10, lon:15.20},
+  "Colombia": {code:"co", group:"K", pot:1, rank:12, lat:4.57, lon:-74.30},
+  "Senegal": {code:"sn", group:"I", pot:2, rank:13, lat:14.50, lon:-14.45},
+  "Mexico": {code:"mx", group:"A", pot:2, rank:14, lat:23.63, lon:-102.55},
+  "United States": {code:"us", group:"D", pot:2, rank:15, lat:37.09, lon:-95.71},
+  "Uruguay": {code:"uy", group:"H", pot:2, rank:16, lat:-32.52, lon:-55.77},
+  "Japan": {code:"jp", group:"F", pot:2, rank:17, lat:36.20, lon:138.25},
+  "Switzerland": {code:"ch", group:"B", pot:2, rank:18, lat:46.82, lon:8.23},
+  "Iran": {code:"ir", group:"G", pot:2, rank:19, lat:32.43, lon:53.69},
+  "Türkiye": {code:"tr", group:"D", pot:2, rank:20, lat:38.96, lon:35.24},
+  "Ecuador": {code:"ec", group:"E", pot:2, rank:21, lat:-1.83, lon:-78.18},
+  "Austria": {code:"at", group:"J", pot:2, rank:22, lat:47.52, lon:14.55},
+  "South Korea": {code:"kr", group:"A", pot:2, rank:23, lat:35.91, lon:127.77},
+  "Australia": {code:"au", group:"D", pot:2, rank:24, lat:-25.27, lon:133.78},
+  "Algeria": {code:"dz", group:"J", pot:3, rank:25, lat:28.03, lon:1.66},
+  "Egypt": {code:"eg", group:"G", pot:3, rank:26, lat:26.82, lon:30.80},
+  "Canada": {code:"ca", group:"B", pot:3, rank:27, lat:56.13, lon:-106.35},
+  "Norway": {code:"no", group:"I", pot:3, rank:28, lat:60.47, lon:8.47},
+  "Panama": {code:"pa", group:"L", pot:3, rank:29, lat:8.54, lon:-80.78},
+  "Côte d’Ivoire": {code:"ci", group:"E", pot:3, rank:30, lat:7.54, lon:-5.55},
+  "Sweden": {code:"se", group:"F", pot:3, rank:31, lat:60.13, lon:18.64},
+  "Paraguay": {code:"py", group:"D", pot:3, rank:32, lat:-23.44, lon:-58.44},
+  "Czechia": {code:"cz", group:"A", pot:3, rank:33, lat:49.82, lon:15.47},
+  "Scotland": {code:"gb-sct", group:"C", pot:3, rank:34, lat:56.49, lon:-4.20},
+  "Tunisia": {code:"tn", group:"F", pot:3, rank:35, lat:33.89, lon:9.54},
+  "DR Congo": {code:"cd", group:"K", pot:3, rank:36, lat:-4.04, lon:21.76},
+  "Uzbekistan": {code:"uz", group:"K", pot:4, rank:37, lat:41.38, lon:64.59},
+  "Qatar": {code:"qa", group:"B", pot:4, rank:38, lat:25.35, lon:51.18},
+  "Iraq": {code:"iq", group:"I", pot:4, rank:39, lat:33.22, lon:43.68},
+  "South Africa": {code:"za", group:"A", pot:4, rank:40, lat:-30.56, lon:22.94},
+  "Saudi Arabia": {code:"sa", group:"H", pot:4, rank:41, lat:23.89, lon:45.08},
+  "Jordan": {code:"jo", group:"J", pot:4, rank:42, lat:30.59, lon:36.24},
+  "Bosnia and Herzegovina": {code:"ba", group:"B", pot:4, rank:43, lat:43.92, lon:17.68},
+  "Cabo Verde": {code:"cv", group:"H", pot:4, rank:44, lat:16.00, lon:-24.01},
+  "Ghana": {code:"gh", group:"L", pot:4, rank:45, lat:7.95, lon:-1.02},
+  "Curaçao": {code:"cw", group:"E", pot:4, rank:46, lat:12.17, lon:-68.99},
+  "Haiti": {code:"ht", group:"C", pot:4, rank:47, lat:18.97, lon:-72.29},
+  "New Zealand": {code:"nz", group:"G", pot:4, rank:48, lat:-40.90, lon:174.89}
+};
+
+let players = [];
+let sortMode = "strength";
+
 const cards = document.getElementById("cards");
 const leader = document.getElementById("leader");
 const select = document.getElementById("playerSelect");
 const mapSelect = document.getElementById("mapPlayerSelect");
-const mapCard = document.getElementById("bigMapCard");
-const mapTitle = document.getElementById("mapTitle");
-const mapSub = document.getElementById("mapSub");
-let sortMode = "strength";
 
+function normaliseTeam(name) {
+  if (name === null || name === undefined) return "";
+  let n = String(name).trim().replace(/\s+/g, " ");
+  return TEAM_ALIASES[n] || n;
+}
 function flagUrl(code) { return `https://flagcdn.com/w80/${code}.png`; }
+function escapeHtml(str) {
+  return String(str ?? "").replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[s]));
+}
+function escapeAttr(str) { return escapeHtml(str); }
 
-for (const p of [...players].sort((a,b)=>a.player.localeCompare(b.player))) {
-  for (const sel of [select, mapSelect]) {
-    const opt = document.createElement("option");
-    opt.value = p.player;
-    opt.textContent = p.player;
-    sel.appendChild(opt);
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = "", inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i], next = text[i+1];
+    if (c === '"' && inQuotes && next === '"') { field += '"'; i++; }
+    else if (c === '"') inQuotes = !inQuotes;
+    else if (c === ',' && !inQuotes) { row.push(field); field = ""; }
+    else if ((c === '\n' || c === '\r') && !inQuotes) {
+      if (c === '\r' && next === '\n') i++;
+      row.push(field); field = "";
+      if (row.some(v => String(v).trim() !== "")) rows.push(row);
+      row = [];
+    } else field += c;
+  }
+  row.push(field);
+  if (row.some(v => String(v).trim() !== "")) rows.push(row);
+  if (!rows.length) return [];
+  const headers = rows[0].map(h => h.trim());
+  return rows.slice(1).map(r => {
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (r[i] ?? "").trim());
+    return obj;
+  });
+}
+async function fetchCSV(url) {
+  if (!url || url.includes("PASTE_")) throw new Error("Missing Players CSV URL. Add your published Google Sheet CSV link inside index.html.");
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Could not fetch Players CSV: ${res.status}`);
+  return parseCSV(await res.text());
+}
+function getField(row, candidates) {
+  for (const c of candidates) if (row[c] !== undefined) return row[c];
+  const keys = Object.keys(row);
+  for (const c of candidates) {
+    const found = keys.find(k => k.toLowerCase().replace(/\s+/g,"") === c.toLowerCase().replace(/\s+/g,""));
+    if (found) return row[found];
+  }
+  return "";
+}
+function parsePlayers(rows) {
+  return rows.map(r => {
+    const rawTeams = [
+      getField(r, ["team1","Team1","Team 1"]),
+      getField(r, ["team2","Team2","Team 2"]),
+      getField(r, ["team3","Team3","Team 3"]),
+      getField(r, ["team4","Team4","Team 4"])
+    ].map(normaliseTeam).filter(Boolean);
+
+    const teams = rawTeams.map(team => ({team, ...(TEAM_META[team] || {code:"", group:"?", pot:"?", rank:99, lat:0, lon:0})}));
+    return {
+      player: getField(r, ["player","Player","Name"]),
+      teams,
+      totalRank: teams.reduce((n,t)=>n+(Number(t.rank)||99),0)
+    };
+  }).filter(p => p.player && p.teams.length);
+}
+function populatePlayerFilters() {
+  select.innerHTML = `<option value="all">Show all players</option>`;
+  mapSelect.innerHTML = `<option value="all">Show all players on map</option>`;
+  for (const p of [...players].sort((a,b)=>a.player.localeCompare(b.player))) {
+    const opt1 = document.createElement("option");
+    opt1.value = p.player;
+    opt1.textContent = p.player;
+    select.appendChild(opt1);
+
+    const opt2 = document.createElement("option");
+    opt2.value = p.player;
+    opt2.textContent = p.player;
+    mapSelect.appendChild(opt2);
   }
 }
-
-function clashCount(player) {
-  const groups = player.teams.map(t => t.group);
-  return groups.length - new Set(groups).size;
-}
-
-function visiblePlayers(fromMap=false) {
-  const selected = fromMap ? mapSelect.value : select.value;
+function render() {
   let visible = [...players];
-  if (selected !== "all") visible = visible.filter(p => p.player === selected);
-  if (!fromMap) {
-    if (sortMode === "strength") visible.sort((a,b)=>a.totalRank-b.totalRank || a.player.localeCompare(b.player));
-    if (sortMode === "name") visible.sort((a,b)=>a.player.localeCompare(b.player));
-    if (sortMode === "pot1") visible.sort((a,b)=>a.teams[0].team.localeCompare(b.teams[0].team));
-  }
-  return visible;
-}
+  if (select.value !== "all") visible = visible.filter(p => p.player === select.value);
+  if (sortMode === "strength") visible.sort((a,b)=>a.totalRank-b.totalRank || a.player.localeCompare(b.player));
+  if (sortMode === "name") visible.sort((a,b)=>a.player.localeCompare(b.player));
+  if (sortMode === "pot1") visible.sort((a,b)=>(a.teams[0]?.team || "").localeCompare(b.teams[0]?.team || ""));
 
-function renderCards() {
-  const visible = visiblePlayers(false);
   cards.innerHTML = visible.map((p) => `
     <article class="card">
       <div class="card-top">
@@ -265,8 +595,8 @@ function renderCards() {
         ${p.teams.map(t => `
           <div class="team">
             <div class="flagbox">
-              <img src="${flagUrl(t.code)}" alt="${escapeAttr(t.team)} flag" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-              <span class="fallback">${t.emoji}</span>
+              ${t.code ? `<img src="${flagUrl(t.code)}" alt="${escapeAttr(t.team)} flag" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">` : ""}
+              <span class="fallback">⚽</span>
             </div>
             <div>
               <div class="team-name">${escapeHtml(t.team)}</div>
@@ -278,9 +608,11 @@ function renderCards() {
       </div>
     </article>
   `).join("");
-  renderLeader();
-}
 
+  renderLeader();
+  renderMap();
+  updateStats();
+}
 function renderLeader() {
   const ranked = [...players].sort((a,b)=>a.totalRank-b.totalRank || a.player.localeCompare(b.player));
   leader.innerHTML = ranked.map((p,i) => `
@@ -291,26 +623,25 @@ function renderLeader() {
     </div>
   `).join("");
 }
-
 function project(lon, lat) {
   return {
     x: ((lon + 180) / 360) * 100,
     y: ((90 - lat) / 180) * 100
   };
 }
-
 function renderMap() {
+  const mapCard = document.getElementById("bigMapCard");
   mapCard.querySelectorAll(".mapPin").forEach(pin => pin.remove());
-  const visible = visiblePlayers(true);
-  let count = 0;
+  let visible = [...players];
+  if (mapSelect.value !== "all") visible = visible.filter(p => p.player === mapSelect.value);
 
+  let count = 0;
   visible.forEach((p, pi) => {
     p.teams.forEach((t, ti) => {
+      if (!t.code) return;
       const pt = project(t.lon, t.lat);
       const pin = document.createElement("span");
       pin.className = "mapPin";
-
-      // Tiny offset where duplicated countries exist, so flags do not completely cover each other.
       const jitterX = ((pi % 5) - 2) * 0.28;
       const jitterY = ((ti % 4) - 1.5) * 0.28;
       pin.style.left = `${pt.x + jitterX}%`;
@@ -318,24 +649,25 @@ function renderMap() {
       pin.dataset.label = `${t.team} · ${p.player} · Group ${t.group} · Pot ${t.pot}`;
       pin.innerHTML = `<img src="${flagUrl(t.code)}" alt="${escapeAttr(t.team)} flag">`;
       mapCard.appendChild(pin);
-      count += 1;
+      count++;
     });
   });
 
+  const mapTitle = document.getElementById("mapTitle");
+  const mapSub = document.getElementById("mapSub");
   if (mapSelect.value === "all") {
     mapTitle.textContent = "All players";
     mapSub.textContent = `Showing ${count} flags. Hover a flag for team, owner, group and pot.`;
   } else {
     const p = visible[0];
     mapTitle.textContent = p ? `${p.player}'s teams` : "No player selected";
-    mapSub.textContent = p ? `${p.teams.map(t => t.team).join(" · ")}` : "";
+    mapSub.textContent = p ? p.teams.map(t => t.team).join(" · ") : "";
   }
 }
-
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[s]));
+function updateStats() {
+  document.getElementById("statPlayers").textContent = players.length;
+  document.getElementById("statTeams").textContent = players.reduce((n,p)=>n+p.teams.length,0);
 }
-function escapeAttr(str) { return escapeHtml(str); }
 
 document.querySelectorAll("button[data-page]").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -346,28 +678,33 @@ document.querySelectorAll("button[data-page]").forEach(btn => {
     renderMap();
   });
 });
-
 document.querySelectorAll(".sortBtn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".sortBtn").forEach(b=>b.classList.remove("active"));
     btn.classList.add("active");
     sortMode = btn.dataset.sort;
-    renderCards();
+    render();
   });
 });
-
-select.addEventListener("change", renderCards);
+select.addEventListener("change", render);
 mapSelect.addEventListener("change", renderMap);
 document.getElementById("resetMap").addEventListener("click", () => {
   mapSelect.value = "all";
   renderMap();
 });
 
-document.getElementById("statPlayers").textContent = players.length;
-document.getElementById("statTeams").textContent = players.reduce((n,p)=>n+p.teams.length,0);
-
-renderCards();
-renderMap();
+async function init() {
+  try {
+    const rows = await fetchCSV(PLAYERS_CSV_URL);
+    players = parsePlayers(rows);
+    populatePlayerFilters();
+    render();
+  } catch (err) {
+    cards.innerHTML = `<div class="notice">${escapeHtml(err.message)}</div>`;
+    console.error(err);
+  }
+}
+init();
 </script>
 </body>
 </html>
