@@ -71,7 +71,7 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
 <body>
 <header>
   <h1>🏆 Current Leaderboard</h1>
-  <div class="subtitle">This page reads the fixtures CSV and group standings CSV, then calculates your sweepstake points automatically.</div>
+  <div class="subtitle">This page reads the fixtures CSV, builds the group tables automatically, then calculates your sweepstake points.</div>
   <div class="controls">
     <a class="navLink" href="index.html">← Draw</a>
     <a class="navLink" href="fixtures-results.html">Fixtures & Results</a>
@@ -85,8 +85,8 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
 
 <main>
   <div class="notice">
-    Replace <strong>FIXTURES_CSV_URL</strong> and <strong>GROUPS_CSV_URL</strong> in this file with your published Google Sheet CSV links.
-    Group CSV can use columns like Team, Group, Position — position 1 gives +2, position 4 gives -2.
+    Replace <strong>FIXTURES_CSV_URL</strong> in this file with your published Google Sheet fixtures CSV link.
+    Group winner bonuses and bottom-group deductions are calculated automatically from the group-stage match results.
   </div>
 
   <section class="stats">
@@ -101,8 +101,7 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
 </main>
 
 <script>
-const FIXTURES_CSV_URL = "PASTE_FIXTURES_GOOGLE_SHEET_CSV_URL_HERE";
-const GROUPS_CSV_URL = "PASTE_GROUPS_GOOGLE_SHEET_CSV_URL_HERE";
+const FIXTURES_CSV_URL = "https://docs.google.com/spreadsheets/d/1kG2TqMEaJYbgva70V5asrxvSXYVtQP6642IQ0P9Qnjg/edit?usp=sharing";
 
 const PLAYERS = [{"player": "Alex", "teams": ["England", "Iran", "Scotland", "Uzbekistan"]}, {"player": "Rhi", "teams": ["Croatia", "Australia", "Czechia", "Iraq"]}, {"player": "Mum", "teams": ["Morocco", "Mexico", "Sweden", "Jordan"]}, {"player": "Dad", "teams": ["Belgium", "Senegal", "Paraguay", "Curaçao"]}, {"player": "Ross", "teams": ["Spain", "Japan", "Norway", "Qatar"]}, {"player": "Poppy", "teams": ["Germany", "Uruguay", "Panama", "Haiti"]}, {"player": "Moyle", "teams": ["England", "South Korea", "DR Congo", "Curaçao"]}, {"player": "Matt", "teams": ["Portugal", "Japan", "Canada", "Cabo Verde"]}, {"player": "Pete", "teams": ["Brazil", "Switzerland", "Sweden", "Saudi Arabia"]}, {"player": "Kimbo", "teams": ["Germany", "Türkiye", "Algeria", "Cabo Verde"]}, {"player": "Ulan", "teams": ["Argentina", "Ecuador", "Egypt", "Ghana"]}, {"player": "A Jane", "teams": ["France", "Ecuador", "DR Congo", "South Africa"]}, {"player": "David", "teams": ["Belgium", "United States", "Canada", "Ghana"]}, {"player": "TT", "teams": ["Netherlands", "Uruguay", "Côte d’Ivoire", "Bosnia and Herzegovina"]}, {"player": "Jackie", "teams": ["Colombia", "Austria", "Tunisia", "New Zealand"]}];
 const TEAM_ALIASES = {"Korea Republic": "South Korea", "Korea Rep": "South Korea", "Korea Republic.": "South Korea", "USA": "United States", "United States of America": "United States", "Turkey": "Türkiye", "Turkiye": "Türkiye", "Ivory Coast": "Côte d’Ivoire", "Cote d'Ivoire": "Côte d’Ivoire", "Côte d'Ivoire": "Côte d’Ivoire", "Cote d’Ivoire": "Côte d’Ivoire", "Cape Verde": "Cabo Verde", "Curacao": "Curaçao", "DR Congo": "DR Congo", "Congo DR": "DR Congo", "Bosnia and Herzegovina": "Bosnia and Herzegovina", "Bosnia and Herz.": "Bosnia and Herzegovina", "Saudi Arabia": "Saudi Arabia"};
@@ -272,19 +271,11 @@ let leaderboard = [];
 
 async function loadLeaderboard() {
   try {
-    showMessage("Loading fixtures and group data…");
+    showMessage("Loading fixtures and calculating group tables…");
     const fixtureRows = await fetchCSV(FIXTURES_CSV_URL);
     const matches = parseMatches(fixtureRows);
 
-    let groupData = {};
-    try {
-      const groupRows = await fetchCSV(GROUPS_CSV_URL);
-      groupData = parseGroupRows(groupRows);
-    } catch (groupErr) {
-      // Allow leaderboard to work before group bonuses are known.
-      groupData = {};
-    }
-
+    const groupData = calculateGroupData(matches);
     leaderboard = calculateLeaderboard(matches, groupData);
     renderStats(matches);
     renderBoard();
@@ -292,6 +283,67 @@ async function loadLeaderboard() {
   } catch (err) {
     showMessage(err.message, true);
   }
+}
+
+
+function calculateGroupData(matches) {
+  const tables = {};
+
+  matches.forEach(m => {
+    if (!m.group || !matchPlayed(m)) return;
+
+    const group = m.group;
+    const home = normaliseTeam(m.homeTeam);
+    const away = normaliseTeam(m.awayTeam);
+    if (!home || !away) return;
+
+    if (!tables[group]) tables[group] = {};
+    for (const team of [home, away]) {
+      if (!tables[group][team]) {
+        tables[group][team] = {team, group, played:0, wins:0, draws:0, losses:0, gf:0, ga:0, gd:0, pts:0};
+      }
+    }
+
+    const hg = num(m.homeScore) || 0;
+    const ag = num(m.awayScore) || 0;
+    const h = tables[group][home];
+    const a = tables[group][away];
+
+    h.played++; a.played++;
+    h.gf += hg; h.ga += ag;
+    a.gf += ag; a.ga += hg;
+
+    if (hg > ag) { h.wins++; a.losses++; h.pts += 3; }
+    else if (hg < ag) { a.wins++; h.losses++; a.pts += 3; }
+    else { h.draws++; a.draws++; h.pts += 1; a.pts += 1; }
+
+    h.gd = h.gf - h.ga;
+    a.gd = a.gf - a.ga;
+  });
+
+  const result = {};
+  Object.values(tables).forEach(groupTable => {
+    const teams = Object.values(groupTable).sort((a,b) =>
+      b.pts - a.pts ||
+      b.gd - a.gd ||
+      b.gf - a.gf ||
+      a.ga - b.ga ||
+      a.team.localeCompare(b.team)
+    );
+
+    // Only apply +2/-2 when the group looks complete: all 4 teams have played 3 matches.
+    const complete = teams.length === 4 && teams.every(t => t.played >= 3);
+
+    teams.forEach((t, idx) => {
+      result[t.team] = {
+        ...t,
+        position: complete ? idx + 1 : null,
+        groupBonus: complete ? (idx === 0 ? 2 : idx === teams.length - 1 ? -2 : 0) : 0
+      };
+    });
+  });
+
+  return result;
 }
 
 function calculateLeaderboard(matches, groupData) {
@@ -314,8 +366,9 @@ function calculateLeaderboard(matches, groupData) {
         matchPoints += scoreTeamInMatch(m, t);
       });
       const groupBonus = groupData[t]?.groupBonus || 0;
+      const groupPosition = groupData[t]?.position || null;
       const total = matchPoints + groupBonus;
-      return {team:t, wins, draws, goals, cleanSheets, reds, matchPoints, groupBonus, total};
+      return {team:t, wins, draws, goals, cleanSheets, reds, matchPoints, groupBonus, groupPosition, total};
     });
     const total = teamDetails.reduce((n,t)=>n+t.total,0);
     return {player:p.player, teams:p.teams, total, teamDetails};
@@ -350,6 +403,7 @@ function renderBoard() {
 }
 
 function renderTeamDetail(t) {
+  const groupText = t.groupPosition ? `Group ${t.groupPosition}: ${t.groupBonus >= 0 ? "+" : ""}${t.groupBonus}` : `Group pending`;
   return `
     <div class="teamScore">
       <strong>${escapeHtml(t.team)}</strong>
@@ -358,7 +412,7 @@ function renderTeamDetail(t) {
       <span>G ${t.goals}</span>
       <span>CS ${t.cleanSheets}</span>
       <span>RC ${t.reds}</span>
-      <span class="${t.groupBonus >= 0 ? "pos" : "neg"}">Group ${t.groupBonus >= 0 ? "+" : ""}${t.groupBonus}</span>
+      <span class="${t.groupBonus >= 0 ? "pos" : "neg"}">${groupText}</span>
       <span><strong>${t.total} pts</strong></span>
     </div>
   `;
