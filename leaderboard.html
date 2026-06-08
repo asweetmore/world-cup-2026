@@ -71,7 +71,7 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
 .total { text-align:right; }
 .total strong { font-size:1.8rem; color:var(--gold); }
 .details { grid-column: 1 / -1; border-top:1px solid rgba(255,255,255,.1); padding-top:12px; display:grid; gap:8px; }
-.teamScore { display:grid; grid-template-columns: minmax(140px,1fr) repeat(7, auto); gap:10px; align-items:center; color:var(--muted); font-size:.9rem; }
+.teamScore { display:grid; grid-template-columns: minmax(140px,1fr) repeat(8, auto); gap:10px; align-items:center; color:var(--muted); font-size:.9rem; }
 .teamScore strong { color:var(--text); }
 .pos { color:var(--green); } .neg { color:var(--red); }
 .sectionTitle { margin: 10px 0 14px; font-size:1.15rem; color:var(--muted); }
@@ -101,9 +101,9 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
 <main>
   <section class="stats">
     <div class="stat"><small>Leader</small><strong id="statLeader">–</strong></div>
-    <div class="stat"><small>Played matches</small><strong id="statPlayed">–</strong></div>
-    <div class="stat"><small>Most goals by player</small><strong id="statMostGoals">–</strong></div>
+    <div class="stat"><small>Most team goals</small><strong id="statMostGoals">–</strong></div>
     <div class="stat"><small>Most red cards</small><strong id="statMostReds">–</strong></div>
+    <div class="stat"><small>Most goals conceded</small><strong id="statMostConceded">–</strong></div>
   </section>
 
   <div id="message" class="loading">Loading leaderboard…</div>
@@ -289,9 +289,9 @@ const els = {
   podium: document.getElementById("podium"),
   board: document.getElementById("board"),
   statLeader: document.getElementById("statLeader"),
-  statPlayed: document.getElementById("statPlayed"),
   statMostGoals: document.getElementById("statMostGoals"),
-  statMostReds: document.getElementById("statMostReds")
+  statMostReds: document.getElementById("statMostReds"),
+  statMostConceded: document.getElementById("statMostConceded")
 };
 
 let leaderboard = [];
@@ -317,7 +317,7 @@ function calculateLeaderboard(matches, groupData, players) {
     const teamDetails = p.teams.map(team => {
       const t = normaliseTeam(team);
       const teamMatches = matches.filter(m => normaliseTeam(m.homeTeam) === t || normaliseTeam(m.awayTeam) === t);
-      let wins=0, draws=0, goals=0, cleanSheets=0, reds=0, matchPoints=0;
+      let wins=0, draws=0, goals=0, goalsConceded=0, cleanSheets=0, reds=0, matchPoints=0;
       teamMatches.forEach(m => {
         if (!matchPlayed(m)) return;
         const isHome = normaliseTeam(m.homeTeam) === t;
@@ -328,32 +328,35 @@ function calculateLeaderboard(matches, groupData, players) {
         if (gf === ga) draws++;
         if (ga === 0) cleanSheets++;
         goals += gf;
+        goalsConceded += ga;
         reds += rc;
         matchPoints += scoreTeamInMatch(m, t);
       });
       const groupBonus = groupData[t]?.groupBonus || 0;
       const groupPosition = groupData[t]?.position || null;
       const total = matchPoints + groupBonus;
-      return {team:t, wins, draws, goals, cleanSheets, reds, matchPoints, groupBonus, groupPosition, total};
+      return {team:t, wins, draws, goals, goalsConceded, cleanSheets, reds, matchPoints, groupBonus, groupPosition, total};
     });
     const total = teamDetails.reduce((n,t)=>n+t.total,0);
     const goals = teamDetails.reduce((n,t)=>n+t.goals,0);
     const reds = teamDetails.reduce((n,t)=>n+t.reds,0);
+    const goalsConceded = teamDetails.reduce((n,t)=>n+t.goalsConceded,0);
     const wins = teamDetails.reduce((n,t)=>n+t.wins,0);
     const cleanSheets = teamDetails.reduce((n,t)=>n+t.cleanSheets,0);
     const groupBonus = teamDetails.reduce((n,t)=>n+t.groupBonus,0);
-    return {player:p.player, teams:p.teams, total, goals, reds, wins, cleanSheets, groupBonus, teamDetails};
+    return {player:p.player, teams:p.teams, total, goals, goalsConceded, reds, wins, cleanSheets, groupBonus, teamDetails};
   }).sort((a,b) => b.total - a.total || b.goals - a.goals || a.player.localeCompare(b.player));
 }
 
 function renderStats(matches) {
-  const played = matches.filter(matchPlayed);
-  const mostGoals = [...leaderboard].sort((a,b)=>b.goals-a.goals)[0];
-  const mostReds = [...leaderboard].sort((a,b)=>b.reds-a.reds)[0];
+  const mostGoals = [...leaderboard].sort((a,b)=>b.goals-a.goals || b.total-a.total)[0];
+  const mostReds = [...leaderboard].sort((a,b)=>b.reds-a.reds || a.total-b.total)[0];
+  const mostConceded = [...leaderboard].sort((a,b)=>b.goalsConceded-a.goalsConceded || a.total-b.total)[0];
+
   els.statLeader.textContent = leaderboard[0] ? `${leaderboard[0].player} (${leaderboard[0].total})` : "–";
-  els.statPlayed.textContent = played.length;
   els.statMostGoals.textContent = mostGoals ? `${mostGoals.player} (${mostGoals.goals})` : "–";
   els.statMostReds.textContent = mostReds ? `${mostReds.player} (${mostReds.reds})` : "–";
+  els.statMostConceded.textContent = mostConceded ? `${mostConceded.player} (${mostConceded.goalsConceded})` : "–";
 }
 
 function renderBoard() {
@@ -374,7 +377,7 @@ function renderPodium(p, i) {
       <div class="medal">${medals[i]}</div>
       <div class="podiumName">${escapeHtml(p.player)}</div>
       <div class="podiumPts">${p.total} pts</div>
-      <div class="meta">Goals ${p.goals} · Wins ${p.wins} · Clean sheets ${p.cleanSheets} · Reds ${p.reds} · Group ${p.groupBonus >= 0 ? "+" : ""}${p.groupBonus}</div>
+      <div class="meta">Goals ${p.goals} · Conceded ${p.goalsConceded} · Wins ${p.wins} · Clean sheets ${p.cleanSheets} · Reds ${p.reds} · Group ${p.groupBonus >= 0 ? "+" : ""}${p.groupBonus}</div>
       <div class="podiumTeams">
         ${p.teamDetails.map(t => `<span class="chip">${flagUrl(t.team) ? `<span class="flag"><img src="${flagUrl(t.team)}" alt=""></span>` : ""}${escapeHtml(t.team)} <strong>${t.total}</strong></span>`).join("")}
       </div>
@@ -388,7 +391,7 @@ function renderRow(p, position, compact) {
       <div class="position">${position}</div>
       <div>
         <div class="playerName">${escapeHtml(p.player)}</div>
-        <div class="meta">Goals ${p.goals} · Wins ${p.wins} · Clean sheets ${p.cleanSheets} · Reds ${p.reds} · Group ${p.groupBonus >= 0 ? "+" : ""}${p.groupBonus}</div>
+        <div class="meta">Goals ${p.goals} · Conceded ${p.goalsConceded} · Wins ${p.wins} · Clean sheets ${p.cleanSheets} · Reds ${p.reds} · Group ${p.groupBonus >= 0 ? "+" : ""}${p.groupBonus}</div>
         <div class="teams">
           ${p.teamDetails.map(t => `<span class="chip">${flagUrl(t.team) ? `<span class="flag"><img src="${flagUrl(t.team)}" alt=""></span>` : ""}${escapeHtml(t.team)}: <strong>${t.total}</strong></span>`).join("")}
         </div>
@@ -407,6 +410,7 @@ function renderTeamDetail(t) {
       <span>W ${t.wins}</span>
       <span>D ${t.draws}</span>
       <span>G ${t.goals}</span>
+      <span>GA ${t.goalsConceded}</span>
       <span>CS ${t.cleanSheets}</span>
       <span>RC ${t.reds}</span>
       <span class="${t.groupBonus >= 0 ? "pos" : "neg"}">${groupText}</span>
