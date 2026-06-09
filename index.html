@@ -111,13 +111,16 @@ main { max-width:1320px; margin:0 auto; padding:0 22px 44px; }
   </section>
 
   <div class="layout">
-    <section class="panel">
-      <h2>🏆 Draw strength table</h2>
-      <div class="footer-note" style="margin-top:0;margin-bottom:12px;">
-        Lower total = stronger draw on paper, teams ordered by FIFA rankings, France = 1 and New Zealand = 48.
-      </div>
-      <div class="leader" id="leader"></div>
-    </section>
+    <section class="grid" id="cards"></section>
+
+    <aside class="side">
+      <section class="panel">
+        <h2>🏆 Draw strength table</h2>
+        <div class="footer-note" style="margin-top:0;margin-bottom:12px;">
+          Lower total = stronger draw on paper, teams ordered by FIFA rankings, France = 1 and New Zealand = 48.
+        </div>
+        <div class="leader" id="leader"></div>
+      </section>
     </aside>
   </div>
 </main>
@@ -248,6 +251,7 @@ function render() {
   if (sortMode === "name") visible.sort((a,b)=>a.player.localeCompare(b.player));
   if (sortMode === "pot1") visible.sort((a,b)=>(a.teams[0]?.team || "").localeCompare(b.teams[0]?.team || ""));
 
+  if (!cards) return;
   cards.innerHTML = visible.map((p) => `
     <article class="card">
       <div class="card-top">
