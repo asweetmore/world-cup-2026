@@ -81,6 +81,110 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
   .total { grid-column:1/-1; text-align:left; }
   .teamScore { grid-template-columns: 1fr 1fr; }
 }
+
+/* Compact leaderboard refinements */
+.podium {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 14px 0 18px;
+}
+.podiumCard {
+  min-height: unset;
+  padding: 14px;
+  border-radius: 22px;
+}
+.podiumCard.first { transform: none; }
+.medal { font-size: 1.45rem; }
+.podiumName { font-size: 1.22rem; margin-top: 4px; }
+.podiumPts { font-size: 1.75rem; margin-top: 2px; }
+.podiumTeams {
+  gap: 5px;
+  margin-top: 8px;
+}
+.podiumTeams .chip {
+  padding: 4px 7px;
+  font-size: .78rem;
+}
+.board {
+  gap: 8px;
+}
+.row {
+  grid-template-columns: 42px 1fr 82px;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 16px;
+}
+.position {
+  width: 30px;
+  height: 30px;
+  font-size: .82rem;
+}
+.playerName {
+  font-size: 1rem;
+}
+.row .meta {
+  font-size: .76rem;
+  margin-top: 2px;
+}
+.teams {
+  gap: 5px;
+  margin-top: 6px;
+}
+.chip {
+  padding: 4px 7px;
+  font-size: .76rem;
+}
+.flag {
+  width: 21px;
+  height: 15px;
+  border-radius: 3px;
+}
+.total strong {
+  font-size: 1.35rem;
+}
+.total small {
+  font-size: .72rem;
+  color: var(--muted);
+}
+.details {
+  padding-top: 8px;
+  gap: 5px;
+}
+.teamScore {
+  font-size: .78rem;
+  gap: 7px;
+}
+.sectionTitle {
+  margin: 6px 0 10px;
+  font-size: 1rem;
+}
+.stats {
+  gap: 10px;
+  margin: 12px 0 16px;
+}
+.stat {
+  padding: 12px;
+  border-radius: 18px;
+}
+.stat strong {
+  font-size: 1.25rem;
+}
+@media (max-width: 860px) {
+  .podium { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .row {
+    grid-template-columns: 34px 1fr 64px;
+  }
+  .total {
+    grid-column: auto;
+    text-align: right;
+  }
+  .teams {
+    display: none;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -113,8 +217,8 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
 </main>
 
 <script>
-const FIXTURES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXLo16qi8E9Tl6PCP5CN-_3F-fbpvUOhWPX7OG5NFSufys68MPlwVXbIV9nLe2VavMBt9w0BPlvOQT/pub?output=csv";
-const PLAYERS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSJ7Xz9f4blVUNfJiUNlIHfUXqvJfCf-6-Ai5IErYs_j4UMxXdjcouXQ-D9hc4hgL0jx9-jvtMKm6L3/pub?output=csv";
+const FIXTURES_CSV_URL = "PASTE_FIXTURES_GOOGLE_SHEET_CSV_URL_HERE";
+const PLAYERS_CSV_URL = "PASTE_PLAYERS_GOOGLE_SHEET_CSV_URL_HERE";
 
 const TEAM_ALIASES = {
   "Korea Republic": "South Korea",
@@ -377,7 +481,7 @@ function renderPodium(p, i) {
       <div class="medal">${medals[i]}</div>
       <div class="podiumName">${escapeHtml(p.player)}</div>
       <div class="podiumPts">${p.total} pts</div>
-      <div class="meta">Goals ${p.goals} · Conceded ${p.goalsConceded} · Wins ${p.wins} · Clean sheets ${p.cleanSheets} · Reds ${p.reds} · Group ${p.groupBonus >= 0 ? "+" : ""}${p.groupBonus}</div>
+      <div class="meta">G ${p.goals} · GA ${p.goalsConceded} · W ${p.wins} · CS ${p.cleanSheets} · RC ${p.reds}</div>
       <div class="podiumTeams">
         ${p.teamDetails.map(t => `<span class="chip">${flagUrl(t.team) ? `<span class="flag"><img src="${flagUrl(t.team)}" alt=""></span>` : ""}${escapeHtml(t.team)} <strong>${t.total}</strong></span>`).join("")}
       </div>
@@ -391,12 +495,12 @@ function renderRow(p, position, compact) {
       <div class="position">${position}</div>
       <div>
         <div class="playerName">${escapeHtml(p.player)}</div>
-        <div class="meta">Goals ${p.goals} · Conceded ${p.goalsConceded} · Wins ${p.wins} · Clean sheets ${p.cleanSheets} · Reds ${p.reds} · Group ${p.groupBonus >= 0 ? "+" : ""}${p.groupBonus}</div>
+        <div class="meta">G ${p.goals} · GA ${p.goalsConceded} · W ${p.wins} · CS ${p.cleanSheets} · RC ${p.reds}</div>
         <div class="teams">
           ${p.teamDetails.map(t => `<span class="chip">${flagUrl(t.team) ? `<span class="flag"><img src="${flagUrl(t.team)}" alt=""></span>` : ""}${escapeHtml(t.team)}: <strong>${t.total}</strong></span>`).join("")}
         </div>
       </div>
-      <div class="total"><small>Total</small><br><strong>${p.total}</strong></div>
+      <div class="total"><small>Pts</small><br><strong>${p.total}</strong></div>
       ${compact ? "" : `<div class="details">${p.teamDetails.map(renderTeamDetail).join("")}</div>`}
     </article>
   `;
