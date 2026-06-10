@@ -185,6 +185,12 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
   }
 }
 
+
+.prizeBadge{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:6px 10px;border-radius:999px;background:rgba(255,209,102,.16);border:1px solid rgba(255,209,102,.34);color:var(--gold);font-weight:1000;font-size:.92rem}
+.woodenSpoon{margin-top:18px}
+.spoonCard{background:linear-gradient(145deg,rgba(215,153,91,.18),rgba(255,255,255,.055));border:1px solid rgba(215,153,91,.36);border-radius:22px;padding:14px 16px;box-shadow:var(--shadow);display:grid;grid-template-columns:42px 1fr auto;gap:12px;align-items:center}
+.spoonEmoji{font-size:1.9rem}.spoonTitle{font-weight:1000;font-size:1.05rem}.spoonPlayer{font-size:1.2rem;font-weight:1000}.spoonPrize{text-align:right;color:var(--gold);font-weight:1000}
+@media(max-width:760px){.spoonCard{grid-template-columns:36px 1fr}.spoonPrize{grid-column:1/-1;text-align:left}}
 </style>
 </head>
 <body>
@@ -214,6 +220,7 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
   <section id="podium" class="podium"></section>
   <h2 class="sectionTitle">The chasing pack</h2>
   <section id="board" class="board"></section>
+  <section id="woodenSpoon" class="woodenSpoon"></section>
 </main>
 
 <script>
@@ -471,6 +478,33 @@ function renderBoard() {
   els.podium.innerHTML = topThree.map((p,i) => renderPodium(p,i)).join("");
   document.querySelector(".sectionTitle").style.display = rest.length ? "block" : "none";
   els.board.innerHTML = rest.map((p, i) => renderRow(p, i + 4, compact)).join("");
+  renderWoodenSpoon();
+}
+
+function podiumPrize(i) { return ["£110","£50","£25"][i] || ""; }
+
+
+function renderWoodenSpoon() {
+  const holder = document.getElementById("woodenSpoon");
+  if (!holder || !leaderboard.length) return;
+  const last = leaderboard[leaderboard.length - 1];
+  const position = leaderboard.length;
+  holder.innerHTML = `
+    <article class="spoonCard">
+      <div class="spoonEmoji">🥄</div>
+      <div>
+        <div class="spoonTitle">Wooden Spoon Prize</div>
+        <div class="spoonPlayer">${escapeHtml(last.player)}</div>
+        <div class="meta">Currently ${position}${ordinalSuffix(position)} · ${last.total} pts · rewarded for spectacular failure</div>
+      </div>
+      <div class="spoonPrize">💷 £15</div>
+    </article>
+  `;
+}
+function ordinalSuffix(n) {
+  const v = n % 100;
+  if (v >= 11 && v <= 13) return "th";
+  return ["th","st","nd","rd"][n % 10] || "th";
 }
 
 function renderPodium(p, i) {
@@ -481,6 +515,7 @@ function renderPodium(p, i) {
       <div class="medal">${medals[i]}</div>
       <div class="podiumName">${escapeHtml(p.player)}</div>
       <div class="podiumPts">${p.total} pts</div>
+      <div class="prizeBadge">💷 ${podiumPrize(i)}</div>
       <div class="meta">G ${p.goals} · GA ${p.goalsConceded} · W ${p.wins} · CS ${p.cleanSheets} · RC ${p.reds}</div>
       <div class="podiumTeams">
         ${p.teamDetails.map(t => `<span class="chip">${flagUrl(t.team) ? `<span class="flag"><img src="${flagUrl(t.team)}" alt=""></span>` : ""}${escapeHtml(t.team)} <strong>${t.total}</strong></span>`).join("")}
