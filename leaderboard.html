@@ -191,14 +191,48 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
 .spoonCard{background:linear-gradient(145deg,rgba(215,153,91,.18),rgba(255,255,255,.055));border:1px solid rgba(215,153,91,.36);border-radius:22px;padding:14px 16px;box-shadow:var(--shadow);display:grid;grid-template-columns:42px 1fr auto;gap:12px;align-items:center}
 .spoonEmoji{font-size:1.9rem}.spoonTitle{font-weight:1000;font-size:1.05rem}.spoonPlayer{font-size:1.2rem;font-weight:1000}.spoonPrize{text-align:right;color:var(--gold);font-weight:1000}
 @media(max-width:760px){.spoonCard{grid-template-columns:36px 1fr}.spoonPrize{grid-column:1/-1;text-align:left}}
+
+.spoonCard.podiumStyle{
+  margin-top:18px;
+  background:linear-gradient(145deg,rgba(215,153,91,.20),rgba(255,255,255,.06));
+  border:1px solid rgba(215,153,91,.48);
+  border-radius:22px;
+  padding:14px;
+  box-shadow:var(--shadow);
+}
+.spoonCard.podiumStyle .spoonTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.spoonCard.podiumStyle .spoonEmoji{
+  font-size:1.65rem;
+}
+.spoonCard.podiumStyle .spoonPlayer{
+  font-size:1.25rem;
+  font-weight:1000;
+  margin-top:4px;
+}
+.spoonCard.podiumStyle .spoonPts{
+  font-size:1.75rem;
+  font-weight:1000;
+  color:var(--gold);
+  margin-top:2px;
+}
+.spoonCard.podiumStyle .spoonTitle{
+  color:var(--muted);
+  font-size:.86rem;
+  font-weight:900;
+}
 </style>
 </head>
 <body>
 <header>
   <h1>🏆 Current Leaderboard</h1>
-  <div class="subtitle">Live table calculated from the fixtures CSV and player draw CSV.</div>
+  <div class="subtitle">Live table calculated from latest results.</div>
   <div class="controls">
-    <a class="navLink" href="index.html">← Draw</a>
+    <a class="navLink" href="index.html">Players & Teams</a>
     <a class="navLink" href="fixtures-results.html">Fixtures & Results</a>
     <button class="primary" id="refreshBtn">Refresh leaderboard</button>
     <select id="viewSelect">
@@ -473,7 +507,7 @@ function renderStats(matches) {
 function renderBoard() {
   const compact = els.viewSelect.value === "compact";
   const topThree = leaderboard.slice(0,3);
-  const rest = leaderboard.slice(3);
+  const rest = leaderboard.length > 3 ? leaderboard.slice(3, -1) : [];
 
   els.podium.innerHTML = topThree.map((p,i) => renderPodium(p,i)).join("");
   document.querySelector(".sectionTitle").style.display = rest.length ? "block" : "none";
@@ -490,14 +524,16 @@ function renderWoodenSpoon() {
   const last = leaderboard[leaderboard.length - 1];
   const position = leaderboard.length;
   holder.innerHTML = `
-    <article class="spoonCard">
-      <div class="spoonEmoji">🥄</div>
-      <div>
-        <div class="spoonTitle">Wooden Spoon Prize</div>
-        <div class="spoonPlayer">${escapeHtml(last.player)}</div>
-        <div class="meta">Currently ${position}${ordinalSuffix(position)} · ${last.total} pts · rewarded for spectacular failure</div>
+    <article class="spoonCard podiumStyle">
+      <div class="spoonTop">
+        <div>
+          <div class="spoonEmoji">🥄</div>
+          <div class="spoonTitle">Wooden Spoon · ${position}${ordinalSuffix(position)}</div>
+          <div class="spoonPlayer">${escapeHtml(last.player)}</div>
+          <div class="spoonPts">${last.total} pts</div>
+          <div class="prizeBadge">💷 £15</div>
+        </div>
       </div>
-      <div class="spoonPrize">💷 £15</div>
     </article>
   `;
 }
