@@ -236,6 +236,11 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
   padding:4px 7px;
   font-size:.76rem;
 }
+
+.stat strong {
+  overflow-wrap:anywhere;
+  line-height:1.15;
+}
 </style>
 </head>
 <body>
@@ -511,15 +516,20 @@ function calculateLeaderboard(matches, groupData, players) {
   );
 }
 
-function renderStats(matches) {
-  const mostGoals = [...leaderboard].sort((a,b)=>b.goals-a.goals || b.total-a.total)[0];
-  const mostReds = [...leaderboard].sort((a,b)=>b.reds-a.reds || a.total-b.total)[0];
-  const mostConceded = [...leaderboard].sort((a,b)=>b.goalsConceded-a.goalsConceded || a.total-b.total)[0];
 
+function tiedStatText(metric, suffix = "") {
+  if (!leaderboard.length) return "–";
+  const maxValue = Math.max(...leaderboard.map(p => Number(p[metric]) || 0));
+  const tied = leaderboard.filter(p => (Number(p[metric]) || 0) === maxValue);
+  const names = tied.map(p => p.player).join(", ");
+  return `${names} (${maxValue}${suffix})`;
+}
+
+function renderStats(matches) {
   els.statLeader.textContent = leaderboard[0] ? `${leaderboard[0].player} (${leaderboard[0].total})` : "–";
-  els.statMostGoals.textContent = mostGoals ? `${mostGoals.player} (${mostGoals.goals})` : "–";
-  els.statMostReds.textContent = mostReds ? `${mostReds.player} (${mostReds.reds})` : "–";
-  els.statMostConceded.textContent = mostConceded ? `${mostConceded.player} (${mostConceded.goalsConceded})` : "–";
+  els.statMostGoals.textContent = tiedStatText("goals");
+  els.statMostReds.textContent = tiedStatText("reds");
+  els.statMostConceded.textContent = tiedStatText("goalsConceded");
 }
 
 function renderBoard() {
