@@ -272,6 +272,42 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
   display:block;
 }
 
+
+/* Final wooden spoon overrides */
+.spoonCard.podiumStyle {
+  display:block !important;
+}
+.spoonCard.podiumStyle .spoonTop {
+  display:block !important;
+}
+.spoonTeams {
+  display:flex !important;
+  flex-direction:row !important;
+  flex-wrap:wrap !important;
+  gap:6px !important;
+  margin-top:10px !important;
+  align-items:center !important;
+}
+.spoonTeams .chip {
+  display:inline-flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  width:auto !important;
+  max-width:none !important;
+  padding:4px 7px !important;
+  font-size:.76rem !important;
+  white-space:nowrap !important;
+}
+.spoonGif {
+  width:100% !important;
+  max-width:260px !important;
+  margin-top:12px !important;
+  border-radius:16px !important;
+  border:1px solid rgba(255,255,255,.14) !important;
+  box-shadow:0 12px 28px rgba(0,0,0,.32) !important;
+  display:block !important;
+}
+
 </style>
 </head>
 <body>
@@ -281,6 +317,7 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
   <div class="controls">
     <a class="navLink" href="index.html">Players & Teams</a>
     <a class="navLink" href="fixtures-results.html">Fixtures & Results</a>
+    <a class="navLink" href="rules.html">Rules</a>
     <button class="primary" id="refreshBtn">Refresh leaderboard</button>
     <select id="viewSelect">
       <option value="compact" selected>Compact view</option>
@@ -584,17 +621,15 @@ function renderWoodenSpoon() {
   const position = leaderboard.length;
   holder.innerHTML = `
     <article class="spoonCard podiumStyle">
-      <div class="spoonTop">
-        <div class="spoonEmoji">🥄</div>
-        <div class="spoonTitle">Wooden Spoon · ${position}${ordinalSuffix(position)}</div>
-        <div class="spoonPlayer">${escapeHtml(last.player)}</div>
-        <div class="spoonPts">${last.total} pts</div>
-        <div class="prizeBadge">💷 £15</div>
-        <div class="spoonTeams">
-          ${last.teamDetails.map(t => `<span class="chip">${flagUrl(t.team) ? `<span class="flag"><img src="${flagUrl(t.team)}" alt=""></span>` : ""}${escapeHtml(t.team)}: <strong>${t.total}</strong></span>`).join("")}
-        </div>
-        <img class="spoonGif" src="https://media4.giphy.com/media/v1.Y2lkPTZjMDliOTUyazdqd21mOGZoZ2o5NHVncnB2ZGMyaTY0ZTYwczgzOXNubHlpMGRjciZlcD12MV9naWZzX3NlYXJjaCZjdD1n/W81qSImkIxkNq/200.gif" alt="Shame meme">
+      <div class="spoonEmoji">🥄</div>
+      <div class="spoonTitle">Wooden Spoon · ${position}${ordinalSuffix(position)}</div>
+      <div class="spoonPlayer">${escapeHtml(last.player)}</div>
+      <div class="spoonPts">${last.total} pts</div>
+      <div class="prizeBadge">💷 £15</div>
+      <div class="spoonTeams">
+        ${last.teamDetails.map(t => `<span class="chip">${flagUrl(t.team) ? `<span class="flag"><img src="${flagUrl(t.team)}" alt=""></span>` : ""}${escapeHtml(t.team)}: <strong>${t.total}</strong></span>`).join("")}
       </div>
+      <img class="spoonGif" src="https://media4.giphy.com/media/v1.Y2lkPTZjMDliOTUyazdqd21mOGZoZ2o5NHVncnB2ZGMyaTY0ZTYwczgzOXNubHlpMGRjciZlcD12MV9naWZzX3NlYXJjaCZjdD1n/W81qSImkIxkNq/200.gif" alt="Shame meme">
     </article>
   `;
 }
