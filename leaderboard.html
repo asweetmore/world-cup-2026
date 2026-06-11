@@ -241,6 +241,37 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
   overflow-wrap:anywhere;
   line-height:1.15;
 }
+
+.spoonCard.podiumStyle .spoonTop {
+  display:block;
+}
+.spoonTeams {
+  display:flex !important;
+  flex-direction:row !important;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:10px;
+  align-items:center;
+}
+.spoonTeams .chip {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  width:auto;
+  padding:4px 7px;
+  font-size:.76rem;
+  white-space:nowrap;
+}
+.spoonGif {
+  width:100%;
+  max-width:220px;
+  margin-top:12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 12px 28px rgba(0,0,0,.32);
+  display:block;
+}
+
 </style>
 </head>
 <body>
@@ -554,16 +585,15 @@ function renderWoodenSpoon() {
   holder.innerHTML = `
     <article class="spoonCard podiumStyle">
       <div class="spoonTop">
-        <div>
-          <div class="spoonEmoji">🥄</div>
-          <div class="spoonTitle">Wooden Spoon · ${position}${ordinalSuffix(position)}</div>
-          <div class="spoonPlayer">${escapeHtml(last.player)}</div>
-          <div class="spoonPts">${last.total} pts</div>
-          <div class="prizeBadge">💷 £15</div>
-          <div class="spoonTeams">
-            ${last.teamDetails.map(t => `<span class="chip">${flagUrl(t.team) ? `<span class="flag"><img src="${flagUrl(t.team)}" alt=""></span>` : ""}${escapeHtml(t.team)}: <strong>${t.total}</strong></span>`).join("")}
-          </div>
+        <div class="spoonEmoji">🥄</div>
+        <div class="spoonTitle">Wooden Spoon · ${position}${ordinalSuffix(position)}</div>
+        <div class="spoonPlayer">${escapeHtml(last.player)}</div>
+        <div class="spoonPts">${last.total} pts</div>
+        <div class="prizeBadge">💷 £15</div>
+        <div class="spoonTeams">
+          ${last.teamDetails.map(t => `<span class="chip">${flagUrl(t.team) ? `<span class="flag"><img src="${flagUrl(t.team)}" alt=""></span>` : ""}${escapeHtml(t.team)}: <strong>${t.total}</strong></span>`).join("")}
         </div>
+        <img class="spoonGif" src="https://media4.giphy.com/media/v1.Y2lkPTZjMDliOTUyazdqd21mOGZoZ2o5NHVncnB2ZGMyaTY0ZTYwczgzOXNubHlpMGRjciZlcD12MV9naWZzX3NlYXJjaCZjdD1n/W81qSImkIxkNq/200.gif" alt="Shame meme">
       </div>
     </article>
   `;
