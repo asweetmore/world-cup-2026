@@ -230,7 +230,7 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
 <body>
 <header>
   <h1>🏆 Current Leaderboard</h1>
-  <div class="subtitle">Live table calculated from latest results.</div>
+  <div class="subtitle">Live table calculated from latest results. Ties are split by wins, goals scored, goals conceded, then red cards.</div>
   <div class="controls">
     <a class="navLink" href="index.html">Players & Teams</a>
     <a class="navLink" href="fixtures-results.html">Fixtures & Results</a>
@@ -490,7 +490,14 @@ function calculateLeaderboard(matches, groupData, players) {
     const cleanSheets = teamDetails.reduce((n,t)=>n+t.cleanSheets,0);
     const groupBonus = teamDetails.reduce((n,t)=>n+t.groupBonus,0);
     return {player:p.player, teams:p.teams, total, goals, goalsConceded, reds, wins, cleanSheets, groupBonus, teamDetails};
-  }).sort((a,b) => b.total - a.total || b.goals - a.goals || a.player.localeCompare(b.player));
+  }).sort((a,b) =>
+    b.total - a.total ||
+    b.wins - a.wins ||
+    b.goals - a.goals ||
+    a.goalsConceded - b.goalsConceded ||
+    a.reds - b.reds ||
+    a.player.localeCompare(b.player)
+  );
 }
 
 function renderStats(matches) {
