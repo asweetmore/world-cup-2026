@@ -225,6 +225,17 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
   font-size:.86rem;
   font-weight:900;
 }
+
+.spoonTeams{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:10px;
+}
+.spoonTeams .chip{
+  padding:4px 7px;
+  font-size:.76rem;
+}
 </style>
 </head>
 <body>
@@ -539,6 +550,9 @@ function renderWoodenSpoon() {
           <div class="spoonPlayer">${escapeHtml(last.player)}</div>
           <div class="spoonPts">${last.total} pts</div>
           <div class="prizeBadge">💷 £15</div>
+          <div class="spoonTeams">
+            ${last.teamDetails.map(t => `<span class="chip">${flagUrl(t.team) ? `<span class="flag"><img src="${flagUrl(t.team)}" alt=""></span>` : ""}${escapeHtml(t.team)}: <strong>${t.total}</strong></span>`).join("")}
+          </div>
         </div>
       </div>
     </article>
