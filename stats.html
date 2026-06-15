@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sweetmore's World Cup Sweepstake - Stats</title>
+<style>
+:root {
+  --bg:#07121f; --panel:rgba(255,255,255,.08); --text:#eef6ff; --muted:#a9bfd6;
+  --gold:#ffd166; --green:#2dd4bf; --red:#ff6b6b; --blue:#7dd3fc; --shadow:0 18px 50px rgba(0,0,0,.35);
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(45,212,191,.24), transparent 34rem),
+    radial-gradient(circle at 80% 15%, rgba(125,211,252,.22), transparent 32rem),
+    radial-gradient(circle at bottom right, rgba(255,209,102,.14), transparent 28rem),
+    var(--bg);
+  min-height:100vh;
+}
+header { padding:30px 22px 18px; max-width:1320px; margin:0 auto; }
+h1 { margin:0; font-size:clamp(2rem,5vw,4.2rem); letter-spacing:-.06em; line-height:.96; }
+.subtitle { margin-top:14px; color:var(--muted); font-size:1.05rem; max-width:920px; }
+.controls { display:flex; flex-wrap:wrap; gap:12px; margin-top:24px; align-items:center; }
+.navLink {
+  border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.1); color:var(--text);
+  padding:11px 14px; border-radius:999px; text-decoration:none; display:inline-flex; align-items:center; font-weight:900;
+  backdrop-filter:blur(10px);
+}
+.activeNav { background:var(--gold); color:#1c1600; border-color:transparent; }
+main { max-width:1320px; margin:0 auto; padding:0 22px 44px; }
+.error { background:rgba(255,107,107,.13); border:1px solid rgba(255,107,107,.3); color:#ffc0c0; border-radius:20px; padding:14px 16px; margin:18px 0; }
+.loading { color:var(--muted); margin:18px 0; }
+.statsGrid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin:16px 0 22px; }
+.stat { background:var(--panel); border:1px solid rgba(255,255,255,.12); border-radius:22px; padding:16px; box-shadow:var(--shadow); }
+.stat small { color:var(--muted); display:block; }
+.stat strong { font-size:1.3rem; display:block; margin-top:4px; overflow-wrap:anywhere; }
+.chartGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.chartCard {
+  background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.055));
+  border:1px solid rgba(255,255,255,.14); border-radius:26px; padding:16px; box-shadow:var(--shadow);
+}
+.chartCard.full { grid-column:1/-1; }
+.chartHeader { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:12px; }
+.chartTitle { margin:0; font-size:1.16rem; color:var(--gold); }
+.chartSub { margin:4px 0 0; color:var(--muted); font-size:.86rem; }
+.bars { display:grid; gap:8px; }
+.barRow { display:grid; grid-template-columns:150px 1fr 58px; gap:10px; align-items:center; }
+.barLabel { font-weight:900; font-size:.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.barTrack { height:22px; border-radius:999px; background:rgba(0,0,0,.20); border:1px solid rgba(255,255,255,.10); overflow:hidden; }
+.barFill { height:100%; min-width:2px; border-radius:999px; background:linear-gradient(90deg,rgba(45,212,191,.80),rgba(255,209,102,.88)); }
+.barValue { text-align:right; font-weight:1000; color:var(--gold); }
+.flag { width:23px; height:16px; border-radius:4px; overflow:hidden; background:rgba(255,255,255,.12); flex:0 0 auto; border:1px solid rgba(255,255,255,.18); display:inline-flex; vertical-align:middle; margin-right:6px; }
+.flag img { width:100%; height:100%; object-fit:cover; display:block; }
+.smallNote { color:var(--muted); font-size:.82rem; margin-top:10px; }
+@media(max-width:960px) {
+  .chartGrid { grid-template-columns:1fr; }
+  .statsGrid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:620px) {
+  .statsGrid { grid-template-columns:1fr; }
+  .barRow { grid-template-columns:86px 1fr 42px; gap:7px; }
+  .barLabel { font-size:.78rem; }
+  .barTrack { height:20px; }
+  .chartCard { padding:13px; border-radius:20px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>📈 Stats</h1>
+  <div class="subtitle">Live visualisations based on the latest fixture results and the player draw.</div>
+  <div class="controls">
+    <a class="navLink" href="index.html">Players & Teams</a>
+    <a class="navLink" href="fixtures-results.html">Fixtures & Results</a>
+    <a class="navLink" href="leaderboard.html">Leaderboard</a>
+    <a class="navLink activeNav" href="stats.html">Stats</a>
+    <a class="navLink" href="rules.html">Rules</a>
+  </div>
+</header>
+
+<main>
+  <section class="statsGrid">
+    <div class="stat"><small>Leader</small><strong id="statLeader">–</strong></div>
+    <div class="stat"><small>Top country</small><strong id="statCountry">–</strong></div>
+    <div class="stat"><small>Most goals</small><strong id="statGoals">–</strong></div>
+    <div class="stat"><small>Most conceded</small><strong id="statGA">–</strong></div>
+  </section>
+
+  <div id="message" class="loading">Loading stats…</div>
+
+  <section class="chartGrid">
+    <article class="chartCard">
+      <div class="chartHeader">
+        <div>
+          <h2 class="chartTitle">Player points</h2>
+          <p class="chartSub">Total sweepstake points by player.</p>
+        </div>
+      </div>
+      <div id="playerPoints" class="bars"></div>
+    </article>
+
+    <article class="chartCard">
+      <div class="chartHeader">
+        <div>
+          <h2 class="chartTitle">Player goals scored</h2>
+          <p class="chartSub">Goals scored by each player's four teams.</p>
+        </div>
+      </div>
+      <div id="playerGoals" class="bars"></div>
+    </article>
+
+    <article class="chartCard">
+      <div class="chartHeader">
+        <div>
+          <h2 class="chartTitle">Player goals against</h2>
+          <p class="chartSub">Goals conceded by each player's four teams.</p>
+        </div>
+      </div>
+      <div id="playerGA" class="bars"></div>
+    </article>
+
+    <article class="chartCard">
+      <div class="chartHeader">
+        <div>
+          <h2 class="chartTitle">Country points</h2>
+          <p class="chartSub">Best performing countries by sweepstake points.</p>
+        </div>
+      </div>
+      <div id="countryPoints" class="bars"></div>
+      <p class="smallNote">Countries are shown once, even if owned by more than one player.</p>
+    </article>
+  </section>
+</main>
+
+<script>
+const FIXTURES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXLo16qi8E9Tl6PCP5CN-_3F-fbpvUOhWPX7OG5NFSufys68MPlwVXbIV9nLe2VavMBt9w0BPlvOQT/pub?output=csv";
+const PLAYERS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSJ7Xz9f4blVUNfJiUNlIHfUXqvJfCf-6-Ai5IErYs_j4UMxXdjcouXQ-D9hc4hgL0jx9-jvtMKm6L3/pub?output=csv";
+
+const TEAM_ALIASES = {
+  "Korea Republic": "South Korea",
+  "Korea Rep": "South Korea",
+  "Korea Rep.": "South Korea",
+  "USA": "United States",
+  "United States of America": "United States",
+  "Turkey": "Türkiye",
+  "Turkiye": "Türkiye",
+  "Ivory Coast": "Côte d’Ivoire",
+  "Cote d'Ivoire": "Côte d’Ivoire",
+  "Côte d'Ivoire": "Côte d’Ivoire",
+  "Cote d’Ivoire": "Côte d’Ivoire",
+  "Cape Verde": "Cabo Verde",
+  "Curacao": "Curaçao",
+  "Congo DR": "DR Congo",
+  "Bosnia and Herz.": "Bosnia and Herzegovina"
+};
+
+const TEAM_FLAG_CODES = {
+  "Argentina":"ar","Australia":"au","Austria":"at","Belgium":"be","Bosnia and Herzegovina":"ba","Brazil":"br",
+  "Cabo Verde":"cv","Canada":"ca","Colombia":"co","Croatia":"hr","Curaçao":"cw","Czechia":"cz",
+  "DR Congo":"cd","Ecuador":"ec","Egypt":"eg","England":"gb-eng","France":"fr","Germany":"de",
+  "Ghana":"gh","Haiti":"ht","Iran":"ir","Iraq":"iq","Japan":"jp","Jordan":"jo","Mexico":"mx",
+  "Morocco":"ma","Netherlands":"nl","New Zealand":"nz","Norway":"no","Panama":"pa","Paraguay":"py",
+  "Portugal":"pt","Qatar":"qa","Saudi Arabia":"sa","Scotland":"gb-sct","Senegal":"sn","South Africa":"za",
+  "South Korea":"kr","Spain":"es","Sweden":"se","Switzerland":"ch","Tunisia":"tn","Türkiye":"tr",
+  "United States":"us","Uruguay":"uy","Uzbekistan":"uz","Côte d’Ivoire":"ci","Algeria":"dz"
+};
+
+function normaliseTeam(name) {
+  if (name === null || name === undefined) return "";
+  let n = String(name).trim().replace(/\s+/g, " ");
+  return TEAM_ALIASES[n] || n;
+}
+function flagUrl(team) {
+  const code = TEAM_FLAG_CODES[normaliseTeam(team)];
+  return code ? `https://flagcdn.com/w80/${code}.png` : "";
+}
+function escapeHtml(str) {
+  return String(str ?? "").replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[s]));
+}
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = "", inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i], next = text[i+1];
+    if (c === '"' && inQuotes && next === '"') { field += '"'; i++; }
+    else if (c === '"') inQuotes = !inQuotes;
+    else if (c === ',' && !inQuotes) { row.push(field); field = ""; }
+    else if ((c === '\n' || c === '\r') && !inQuotes) {
+      if (c === '\r' && next === '\n') i++;
+      row.push(field); field = "";
+      if (row.some(v => String(v).trim() !== "")) rows.push(row);
+      row = [];
+    } else field += c;
+  }
+  row.push(field);
+  if (row.some(v => String(v).trim() !== "")) rows.push(row);
+  if (!rows.length) return [];
+  const headers = rows[0].map(h => h.trim());
+  return rows.slice(1).map(r => {
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (r[i] ?? "").trim());
+    return obj;
+  });
+}
+async function fetchCSV(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Could not fetch CSV: ${res.status}`);
+  return parseCSV(await res.text());
+}
+function getField(row, candidates) {
+  for (const c of candidates) if (row[c] !== undefined) return row[c];
+  const keys = Object.keys(row);
+  for (const c of candidates) {
+    const found = keys.find(k => k.toLowerCase().replace(/\s+/g,"") === c.toLowerCase().replace(/\s+/g,""));
+    if (found) return row[found];
+  }
+  return "";
+}
+function num(value) {
+  if (value === null || value === undefined || String(value).trim() === "") return null;
+  const n = Number(String(value).trim());
+  return Number.isFinite(n) ? n : null;
+}
+function matchPlayed(match) {
+  return num(match.homeScore) !== null && num(match.awayScore) !== null;
+}
+function parseMatches(rows) {
+  return rows.map(r => ({
+    matchNum: getField(r, ["Match Num","Match Number","Match"]),
+    roundNum: getField(r, ["Round Num","Round Number","Round"]),
+    date: getField(r, ["Date"]),
+    location: getField(r, ["Location","Venue","Stadium"]),
+    homeTeam: normaliseTeam(getField(r, ["Home Team","Home Team ","Home"])),
+    awayTeam: normaliseTeam(getField(r, ["Away Team","Away Team ","Away"])),
+    group: getField(r, ["Group"]),
+    homeScore: getField(r, ["Home Score","Home Goals","HG"]),
+    awayScore: getField(r, ["Away Score","Away Goals","AG"]),
+    homeRC: getField(r, ["Home RC","Home Red Cards","Home Reds"]),
+    awayRC: getField(r, ["Away RC","Away Red Cards","Away Reds"])
+  }));
+}
+function parsePlayers(rows) {
+  return rows.map(r => ({
+    player: getField(r, ["player","Player","Name"]),
+    teams: [
+      getField(r, ["team1","Team1","Team 1"]),
+      getField(r, ["team2","Team2","Team 2"]),
+      getField(r, ["team3","Team3","Team 3"]),
+      getField(r, ["team4","Team4","Team 4"])
+    ].map(normaliseTeam).filter(Boolean)
+  })).filter(p => p.player && p.teams.length);
+}
+function scoreTeamInMatch(match, team) {
+  team = normaliseTeam(team);
+  const home = normaliseTeam(match.homeTeam);
+  const away = normaliseTeam(match.awayTeam);
+  if (team !== home && team !== away) return 0;
+  if (!matchPlayed(match)) return 0;
+  const isHome = team === home;
+  const goalsFor = isHome ? num(match.homeScore) : num(match.awayScore);
+  const goalsAgainst = isHome ? num(match.awayScore) : num(match.homeScore);
+  const reds = isHome ? (num(match.homeRC) ?? 0) : (num(match.awayRC) ?? 0);
+  let points = 0;
+  if (goalsFor > goalsAgainst) points += 3;
+  else if (goalsFor === goalsAgainst) points += 1;
+  if (goalsAgainst === 0) points += 2;
+  points += goalsFor;
+  points -= reds;
+  return points;
+}
+function calculateGroupData(matches) {
+  const tables = {};
+  matches.forEach(m => {
+    if (!m.group || !matchPlayed(m)) return;
+    const group = m.group;
+    const home = normaliseTeam(m.homeTeam);
+    const away = normaliseTeam(m.awayTeam);
+    if (!home || !away) return;
+    if (!tables[group]) tables[group] = {};
+    for (const team of [home, away]) {
+      if (!tables[group][team]) tables[group][team] = {team, group, played:0, wins:0, draws:0, losses:0, gf:0, ga:0, gd:0, pts:0};
+    }
+    const hg = num(m.homeScore) || 0, ag = num(m.awayScore) || 0;
+    const h = tables[group][home], a = tables[group][away];
+    h.played++; a.played++;
+    h.gf += hg; h.ga += ag; a.gf += ag; a.ga += hg;
+    if (hg > ag) { h.wins++; a.losses++; h.pts += 3; }
+    else if (hg < ag) { a.wins++; h.losses++; a.pts += 3; }
+    else { h.draws++; a.draws++; h.pts += 1; a.pts += 1; }
+    h.gd = h.gf - h.ga; a.gd = a.gf - a.ga;
+  });
+  const result = {};
+  Object.values(tables).forEach(groupTable => {
+    const teams = Object.values(groupTable).sort((a,b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.ga - b.ga || a.team.localeCompare(b.team));
+    const complete = teams.length === 4 && teams.every(t => t.played >= 3);
+    teams.forEach((t, idx) => {
+      result[t.team] = {...t, position: complete ? idx + 1 : null, groupBonus: complete ? (idx === 0 ? 2 : idx === teams.length - 1 ? -2 : 0) : 0};
+    });
+  });
+  return result;
+}
+function calculateTeamDetails(team, matches, groupData) {
+  const t = normaliseTeam(team);
+  const teamMatches = matches.filter(m => normaliseTeam(m.homeTeam) === t || normaliseTeam(m.awayTeam) === t);
+  let played=0, wins=0, draws=0, goals=0, goalsConceded=0, cleanSheets=0, reds=0, matchPoints=0;
+  teamMatches.forEach(m => {
+    if (!matchPlayed(m)) return;
+    played++;
+    const isHome = normaliseTeam(m.homeTeam) === t;
+    const gf = isHome ? num(m.homeScore) : num(m.awayScore);
+    const ga = isHome ? num(m.awayScore) : num(m.homeScore);
+    const rc = isHome ? (num(m.homeRC)||0) : (num(m.awayRC)||0);
+    if (gf > ga) wins++;
+    if (gf === ga) draws++;
+    if (ga === 0) cleanSheets++;
+    goals += gf;
+    goalsConceded += ga;
+    reds += rc;
+    matchPoints += scoreTeamInMatch(m, t);
+  });
+  const groupBonus = groupData[t]?.groupBonus || 0;
+  const total = matchPoints + groupBonus;
+  return {team:t, played, wins, draws, goals, goalsConceded, cleanSheets, reds, matchPoints, groupBonus, total};
+}
+function calculatePlayerStats(matches, groupData, players) {
+  return players.map(p => {
+    const teamDetails = p.teams.map(team => calculateTeamDetails(team, matches, groupData));
+    return {
+      player:p.player,
+      total: teamDetails.reduce((n,t)=>n+t.total,0),
+      goals: teamDetails.reduce((n,t)=>n+t.goals,0),
+      goalsConceded: teamDetails.reduce((n,t)=>n+t.goalsConceded,0),
+      played: teamDetails.reduce((n,t)=>n+t.played,0),
+      wins: teamDetails.reduce((n,t)=>n+t.wins,0),
+      draws: teamDetails.reduce((n,t)=>n+t.draws,0),
+      reds: teamDetails.reduce((n,t)=>n+t.reds,0),
+      teamDetails
+    };
+  }).sort((a,b) => b.total - a.total || b.wins - a.wins || b.goals - a.goals || a.goalsConceded - b.goalsConceded || a.reds - b.reds || a.player.localeCompare(b.player));
+}
+function calculateCountryStats(matches, groupData, players) {
+  const allTeams = Array.from(new Set(players.flatMap(p => p.teams).map(normaliseTeam))).filter(Boolean);
+  return allTeams.map(team => calculateTeamDetails(team, matches, groupData))
+    .sort((a,b) => b.total - a.total || b.wins - a.wins || b.goals - a.goals || a.goalsConceded - b.goalsConceded || a.reds - b.reds || a.team.localeCompare(b.team));
+}
+function renderBars(id, rows, labelKey, valueKey, options = {}) {
+  const holder = document.getElementById(id);
+  if (!holder) return;
+  const maxAbs = Math.max(1, ...rows.map(r => Math.abs(Number(r[valueKey]) || 0)));
+  holder.innerHTML = rows.map(r => {
+    const val = Number(r[valueKey]) || 0;
+    const pct = Math.max(3, Math.abs(val) / maxAbs * 100);
+    const label = options.flag ? `${flagUrl(r[labelKey]) ? `<span class="flag"><img src="${flagUrl(r[labelKey])}" alt=""></span>` : ""}${escapeHtml(r[labelKey])}` : escapeHtml(r[labelKey]);
+    return `<div class="barRow">
+      <div class="barLabel" title="${escapeHtml(r[labelKey])}">${label}</div>
+      <div class="barTrack"><div class="barFill" style="width:${pct}%"></div></div>
+      <div class="barValue">${val}</div>
+    </div>`;
+  }).join("");
+}
+function tiedNames(rows, metric) {
+  if (!rows.length) return "–";
+  const max = Math.max(...rows.map(r => Number(r[metric]) || 0));
+  return rows.filter(r => (Number(r[metric]) || 0) === max).map(r => r.player || r.team).join(", ") + ` (${max})`;
+}
+async function loadStats() {
+  try {
+    document.getElementById("message").textContent = "Loading stats…";
+    const [fixtureRows, playerRows] = await Promise.all([fetchCSV(FIXTURES_CSV_URL), fetchCSV(PLAYERS_CSV_URL)]);
+    const matches = parseMatches(fixtureRows);
+    const players = parsePlayers(playerRows);
+    const groupData = calculateGroupData(matches);
+    const playerStats = calculatePlayerStats(matches, groupData, players);
+    const countryStats = calculateCountryStats(matches, groupData, players);
+
+    document.getElementById("statLeader").textContent = playerStats[0] ? `${playerStats[0].player} (${playerStats[0].total})` : "–";
+    document.getElementById("statCountry").textContent = countryStats[0] ? `${countryStats[0].team} (${countryStats[0].total})` : "–";
+    document.getElementById("statGoals").textContent = tiedNames(playerStats, "goals");
+    document.getElementById("statGA").textContent = tiedNames(playerStats, "goalsConceded");
+
+    renderBars("playerPoints", playerStats, "player", "total");
+    renderBars("playerGoals", [...playerStats].sort((a,b)=>b.goals-a.goals || b.total-a.total), "player", "goals");
+    renderBars("playerGA", [...playerStats].sort((a,b)=>b.goalsConceded-a.goalsConceded || a.total-b.total), "player", "goalsConceded");
+    renderBars("countryPoints", countryStats, "team", "total", {flag:true});
+
+    document.getElementById("message").textContent = `Stats refreshed ${new Intl.DateTimeFormat("en-GB", {dateStyle:"medium", timeStyle:"short"}).format(new Date())}.`;
+  } catch (err) {
+    const msg = document.getElementById("message");
+    msg.className = "error";
+    msg.textContent = err.message;
+  }
+}
+loadStats();
+</script>
+</body>
+</html>
