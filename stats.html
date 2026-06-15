@@ -50,7 +50,7 @@ main { max-width:1320px; margin:0 auto; padding:0 22px 44px; }
 .barRow { display:grid; grid-template-columns:150px 1fr 58px; gap:10px; align-items:center; }
 .barLabel { font-weight:900; font-size:.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .barTrack { height:22px; border-radius:999px; background:rgba(0,0,0,.20); border:1px solid rgba(255,255,255,.10); overflow:hidden; }
-.barFill { height:100%; min-width:2px; border-radius:999px; background:linear-gradient(90deg,rgba(45,212,191,.80),rgba(255,209,102,.88)); }
+.barFill { height:100%; min-width:0; border-radius:999px; background:linear-gradient(90deg,rgba(45,212,191,.80),rgba(255,209,102,.88)); }
 .barValue { text-align:right; font-weight:1000; color:var(--gold); }
 .flag { width:23px; height:16px; border-radius:4px; overflow:hidden; background:rgba(255,255,255,.12); flex:0 0 auto; border:1px solid rgba(255,255,255,.18); display:inline-flex; vertical-align:middle; margin-right:6px; }
 .flag img { width:100%; height:100%; object-fit:cover; display:block; }
@@ -167,6 +167,23 @@ const TEAM_FLAG_CODES = {
   "South Korea":"kr","Spain":"es","Sweden":"se","Switzerland":"ch","Tunisia":"tn","Türkiye":"tr",
   "United States":"us","Uruguay":"uy","Uzbekistan":"uz","Côte d’Ivoire":"ci","Algeria":"dz"
 };
+
+
+const TEAM_ABBR = {
+  "Argentina":"ARG","Australia":"AUS","Austria":"AUT","Belgium":"BEL","Bosnia and Herzegovina":"BIH","Brazil":"BRA",
+  "Cabo Verde":"CPV","Canada":"CAN","Colombia":"COL","Croatia":"CRO","Curaçao":"CUW","Czechia":"CZE",
+  "DR Congo":"COD","Ecuador":"ECU","Egypt":"EGY","England":"ENG","France":"FRA","Germany":"GER",
+  "Ghana":"GHA","Haiti":"HAI","Iran":"IRN","Iraq":"IRQ","Japan":"JPN","Jordan":"JOR","Mexico":"MEX",
+  "Morocco":"MAR","Netherlands":"NED","New Zealand":"NZL","Norway":"NOR","Panama":"PAN","Paraguay":"PAR",
+  "Portugal":"POR","Qatar":"QAT","Saudi Arabia":"KSA","Scotland":"SCO","Senegal":"SEN","South Africa":"RSA",
+  "South Korea":"KOR","Spain":"ESP","Sweden":"SWE","Switzerland":"SUI","Tunisia":"TUN","Türkiye":"TUR",
+  "United States":"USA","Uruguay":"URU","Uzbekistan":"UZB","Côte d’Ivoire":"CIV","Algeria":"ALG"
+};
+
+function teamDisplayName(team, compact = false) {
+  const t = normaliseTeam(team);
+  return compact ? (TEAM_ABBR[t] || t.slice(0,3).toUpperCase()) : t;
+}
 
 function normaliseTeam(name) {
   if (name === null || name === undefined) return "";
@@ -349,11 +366,12 @@ function calculateCountryStats(matches, groupData, players) {
 function renderBars(id, rows, labelKey, valueKey, options = {}) {
   const holder = document.getElementById(id);
   if (!holder) return;
-  const maxAbs = Math.max(1, ...rows.map(r => Math.abs(Number(r[valueKey]) || 0)));
+  const maxPositive = Math.max(1, ...rows.map(r => Math.max(0, Number(r[valueKey]) || 0)));
   holder.innerHTML = rows.map(r => {
     const val = Number(r[valueKey]) || 0;
-    const pct = Math.max(3, Math.abs(val) / maxAbs * 100);
-    const label = options.flag ? `${flagUrl(r[labelKey]) ? `<span class="flag"><img src="${flagUrl(r[labelKey])}" alt=""></span>` : ""}${escapeHtml(r[labelKey])}` : escapeHtml(r[labelKey]);
+    const pct = val <= 0 ? 0 : (val / maxPositive * 100);
+    const displayLabel = options.flag ? teamDisplayName(r[labelKey], true) : r[labelKey];
+    const label = options.flag ? `${flagUrl(r[labelKey]) ? `<span class="flag"><img src="${flagUrl(r[labelKey])}" alt=""></span>` : ""}${escapeHtml(displayLabel)}` : escapeHtml(displayLabel);
     return `<div class="barRow">
       <div class="barLabel" title="${escapeHtml(r[labelKey])}">${label}</div>
       <div class="barTrack"><div class="barFill" style="width:${pct}%"></div></div>
