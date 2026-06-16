@@ -285,16 +285,37 @@ function parseOwners(rows) {
   });
   return owners;
 }
+function parseUKDateTime(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+
+  // Prefer UK date parsing first for dd/mm/yyyy or dd-mm-yyyy.
+  const m = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+(\d{1,2}):(\d{2}))?/);
+  if (m) {
+    const day = Number(m[1]);
+    const month = Number(m[2]) - 1;
+    const year = Number(m[3].length === 2 ? "20" + m[3] : m[3]);
+    const hour = Number(m[4] || 0);
+    const minute = Number(m[5] || 0);
+    const d = new Date(year, month, day, hour, minute);
+    if (!Number.isNaN(d.getTime())) return d;
+  }
+
+  // Fall back for long dates such as "Friday, 12 June 2026".
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 function formatDate(value) {
   if (!value) return "TBC";
-  const d = new Date(value);
-  if (!isNaN(d)) return new Intl.DateTimeFormat("en-GB", {weekday:"short", day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit"}).format(d);
+  const d = parseUKDateTime(value);
+  if (d) return new Intl.DateTimeFormat("en-GB", {weekday:"short", day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit"}).format(d);
   return value;
 }
 function dateHeading(value) {
   if (!value) return "Date TBC";
-  const d = new Date(value);
-  if (!isNaN(d)) return new Intl.DateTimeFormat("en-GB", {weekday:"long", day:"2-digit", month:"long", year:"numeric"}).format(d);
+  const d = parseUKDateTime(value);
+  if (d) return new Intl.DateTimeFormat("en-GB", {weekday:"long", day:"2-digit", month:"long", year:"numeric"}).format(d);
   return String(value).split(" ")[0];
 }
 
@@ -321,21 +342,7 @@ function populateFilters() {
 }
 
 function parseFixtureDate(match) {
-  const raw = String(match.date || "").trim();
-  if (!raw) return null;
-  let d = new Date(raw);
-  if (!Number.isNaN(d.getTime())) return d;
-  const m = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+(\d{1,2}):(\d{2}))?/);
-  if (m) {
-    const year = Number(m[3].length === 2 ? "20" + m[3] : m[3]);
-    const month = Number(m[2]) - 1;
-    const day = Number(m[1]);
-    const hour = Number(m[4] || 0);
-    const minute = Number(m[5] || 0);
-    d = new Date(year, month, day, hour, minute);
-    if (!Number.isNaN(d.getTime())) return d;
-  }
-  return null;
+  return parseUKDateTime(match.date);
 }
 function isRecentFixture(match) {
   const d = parseFixtureDate(match);
