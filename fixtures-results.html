@@ -109,6 +109,51 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
 .recentSection { margin:18px 0 22px; }
 .sectionTitle { margin:8px 0 10px; color:var(--gold); font-size:1.15rem; }
 .recentEmpty, .noticeBox { color:var(--muted); background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12); border-radius:18px; padding:12px 14px; }
+
+/* Stronger fixture section separation */
+.recentSection {
+  margin:22px 0 28px !important;
+}
+.allFixturesSection {
+  margin-top:30px !important;
+  padding-top:24px !important;
+  border-top:2px solid rgba(255,255,255,.18) !important;
+  position:relative;
+}
+.allFixturesSection::before {
+  content:"";
+  position:absolute;
+  top:-2px;
+  left:0;
+  width:180px;
+  height:2px;
+  background:linear-gradient(90deg,var(--gold),rgba(255,209,102,0));
+}
+.recentSection .sectionTitle,
+.allFixturesSection .sectionTitle {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:0 0 14px !important;
+  font-size:1.45rem !important;
+  line-height:1.1;
+  color:var(--gold) !important;
+  letter-spacing:-.03em;
+}
+.recentSection .sectionTitle::before {
+  content:"⚡";
+}
+.allFixturesSection .sectionTitle::before {
+  content:"📅";
+}
+.recentSection .sectionTitle::after,
+.allFixturesSection .sectionTitle::after {
+  content:"";
+  height:1px;
+  flex:1;
+  background:linear-gradient(90deg,rgba(255,209,102,.42),rgba(255,255,255,0));
+}
+
 </style>
 </head>
 <body>
