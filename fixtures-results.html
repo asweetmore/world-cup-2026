@@ -105,6 +105,10 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
   .owner { font-size:.68rem; }
   .score { font-size:1.12rem; }
 }
+
+.recentSection { margin:18px 0 22px; }
+.sectionTitle { margin:8px 0 10px; color:var(--gold); font-size:1.15rem; }
+.recentEmpty, .noticeBox { color:var(--muted); background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12); border-radius:18px; padding:12px 14px; }
 </style>
 </head>
 <body>
@@ -116,6 +120,7 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
     <a class="navLink" href="index.html">Players & Teams</a>
     <a class="navLink activeNav" href="fixtures-results.html">Fixtures & Results</a>
     <a class="navLink" href="leaderboard.html">Leaderboard</a>
+    <a class="navLink" href="stats.html">Stats</a>
     <a class="navLink" href="rules.html">Rules</a>
   </nav>
 
@@ -140,7 +145,16 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
   </section>
 
   <div id="message" class="loading">Loading fixtures…</div>
-  <section id="matches" class="fixtureList"></section>
+
+  <section class="recentSection">
+    <h2 class="sectionTitle">Recent</h2>
+    <div id="recentMatches" class="fixtureList"></div>
+  </section>
+
+  <section class="allFixturesSection">
+    <h2 class="sectionTitle">All fixtures</h2>
+    <section id="matches" class="fixtureList"></section>
+  </section>
 </main>
 
 <script>
@@ -173,6 +187,7 @@ const els = {
   teamFilter: document.getElementById("teamFilter"),
   message: document.getElementById("message"),
   matches: document.getElementById("matches"),
+  recentMatches: document.getElementById("recentMatches"),
   statTotal: document.getElementById("statTotal"),
   statPlayed: document.getElementById("statPlayed"),
   statGoals: document.getElementById("statGoals"),
@@ -304,6 +319,48 @@ function populateFilters() {
   allMatches.forEach(m => { if (m.homeTeam) teams.add(m.homeTeam); if (m.awayTeam) teams.add(m.awayTeam); });
   els.teamFilter.innerHTML = `<option value="all">All teams</option>` + [...teams].sort().map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
 }
+
+function parseFixtureDate(match) {
+  const raw = String(match.date || "").trim();
+  if (!raw) return null;
+  let d = new Date(raw);
+  if (!Number.isNaN(d.getTime())) return d;
+  const m = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+(\d{1,2}):(\d{2}))?/);
+  if (m) {
+    const year = Number(m[3].length === 2 ? "20" + m[3] : m[3]);
+    const month = Number(m[2]) - 1;
+    const day = Number(m[1]);
+    const hour = Number(m[4] || 0);
+    const minute = Number(m[5] || 0);
+    d = new Date(year, month, day, hour, minute);
+    if (!Number.isNaN(d.getTime())) return d;
+  }
+  return null;
+}
+function isRecentFixture(match) {
+  const d = parseFixtureDate(match);
+  if (!d) return false;
+  const now = new Date();
+  return d.getTime() >= now.getTime() - 24*60*60*1000 && d.getTime() <= now.getTime() + 24*60*60*1000;
+}
+function matchKey(m) {
+  return `${m.matchNum}|${m.homeTeam}|${m.awayTeam}|${m.date}`;
+}
+function renderGroupedMatches(matches) {
+  const grouped = new Map();
+  matches.forEach(m => {
+    const key = dateHeading(m.date);
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key).push(m);
+  });
+  return [...grouped.entries()].map(([date, ms]) => `
+    <div class="dateGroup">
+      <h2 class="dateTitle">${escapeHtml(date)}</h2>
+      ${ms.map(renderMatch).join("")}
+    </div>
+  `).join("");
+}
+
 function filteredMatches() {
   const status = els.statusFilter.value, group = els.groupFilter.value, team = els.teamFilter.value;
   return allMatches.filter(m => {
@@ -321,21 +378,22 @@ function render() {
   renderStats();
   const matches = filteredMatches();
   if (!matches.length) {
+    els.recentMatches.innerHTML = `<div class="recentEmpty">No fixtures within the last 24 hours or next 24 hours.</div>`;
     els.matches.innerHTML = `<div class="notice">No fixtures match your filters.</div>`;
     return;
   }
-  const grouped = new Map();
-  matches.forEach(m => {
-    const key = dateHeading(m.date);
-    if (!grouped.has(key)) grouped.set(key, []);
-    grouped.get(key).push(m);
-  });
-  els.matches.innerHTML = [...grouped.entries()].map(([date, ms]) => `
-    <div class="dateGroup">
-      <h2 class="dateTitle">${escapeHtml(date)}</h2>
-      ${ms.map(renderMatch).join("")}
-    </div>
-  `).join("");
+
+  const recent = matches.filter(isRecentFixture);
+  const recentKeys = new Set(recent.map(matchKey));
+  const remaining = matches.filter(m => !recentKeys.has(matchKey(m)));
+
+  els.recentMatches.innerHTML = recent.length
+    ? renderGroupedMatches(recent)
+    : `<div class="recentEmpty">No fixtures within the last 24 hours or next 24 hours.</div>`;
+
+  els.matches.innerHTML = remaining.length
+    ? renderGroupedMatches(remaining)
+    : `<div class="notice">No other fixtures match your filters.</div>`;
 }
 function renderStats() {
   const played = allMatches.filter(matchPlayed);
