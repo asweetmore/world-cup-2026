@@ -66,6 +66,85 @@ main { max-width:1320px; margin:0 auto; padding:0 22px 44px; }
   .barTrack { height:20px; }
   .chartCard { padding:13px; border-radius:20px; }
 }
+
+.rankTable {
+  display:grid;
+  gap:8px;
+}
+.rankRow {
+  display:grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap:10px;
+  align-items:center;
+  padding:9px 10px;
+  border-radius:16px;
+  background:rgba(0,0,0,.16);
+  border:1px solid rgba(255,255,255,.10);
+}
+.rankRow.header {
+  background:rgba(255,255,255,.08);
+  color:var(--muted);
+  font-size:.78rem;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.rankName {
+  font-weight:1000;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.rankVal {
+  font-weight:1000;
+  text-align:right;
+  color:var(--text);
+}
+.rankVal.good { color:var(--green); }
+.rankVal.bad { color:var(--red); }
+.scatterWrap {
+  width:100%;
+  overflow-x:auto;
+}
+.scatterSvg {
+  width:100%;
+  min-width:620px;
+  height:auto;
+  display:block;
+}
+.scatterAxis {
+  stroke:rgba(255,255,255,.28);
+  stroke-width:1;
+}
+.scatterGridLine {
+  stroke:rgba(255,255,255,.09);
+  stroke-width:1;
+}
+.scatterLabel {
+  fill:var(--muted);
+  font-size:12px;
+}
+.scatterPointLabel {
+  fill:var(--text);
+  font-size:11px;
+  font-weight:900;
+}
+.scatterPoint {
+  fill:var(--gold);
+  stroke:rgba(7,18,31,.85);
+  stroke-width:2;
+}
+@media(max-width:620px) {
+  .rankRow {
+    grid-template-columns: 1fr auto auto;
+    font-size:.82rem;
+    gap:7px;
+  }
+  .rankRow.performance {
+    grid-template-columns: 1fr auto auto auto;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -105,6 +184,26 @@ main { max-width:1320px; margin:0 auto; padding:0 22px 44px; }
     <article class="chartCard">
       <div class="chartHeader">
         <div>
+          <h2 class="chartTitle">Performance vs draw strength</h2>
+          <p class="chartSub">Live rank compared with initial draw-strength rank. Positive means overperforming.</p>
+        </div>
+      </div>
+      <div id="performanceTable" class="rankTable"></div>
+    </article>
+
+    <article class="chartCard">
+      <div class="chartHeader">
+        <div>
+          <h2 class="chartTitle">Points per game</h2>
+          <p class="chartSub">Total points divided by matches played across each player's teams.</p>
+        </div>
+      </div>
+      <div id="ppgTable" class="rankTable"></div>
+    </article>
+
+    <article class="chartCard">
+      <div class="chartHeader">
+        <div>
           <h2 class="chartTitle">Player goals scored</h2>
           <p class="chartSub">Goals scored by each player's four teams.</p>
         </div>
@@ -120,6 +219,16 @@ main { max-width:1320px; margin:0 auto; padding:0 22px 44px; }
         </div>
       </div>
       <div id="playerGA" class="bars"></div>
+    </article>
+
+    <article class="chartCard full">
+      <div class="chartHeader">
+        <div>
+          <h2 class="chartTitle">Unluckiest player: points vs goals scored</h2>
+          <p class="chartSub">High goals with low points suggests a player whose teams score but still do not convert it into sweepstake points.</p>
+        </div>
+      </div>
+      <div id="unluckyScatter" class="scatterWrap"></div>
     </article>
 
     <article class="chartCard">
@@ -178,6 +287,14 @@ const TEAM_ABBR = {
   "Portugal":"POR","Qatar":"QAT","Saudi Arabia":"KSA","Scotland":"SCO","Senegal":"SEN","South Africa":"RSA",
   "South Korea":"KOR","Spain":"ESP","Sweden":"SWE","Switzerland":"SUI","Tunisia":"TUN","Türkiye":"TUR",
   "United States":"USA","Uruguay":"URU","Uzbekistan":"UZB","Côte d’Ivoire":"CIV","Algeria":"ALG"
+};
+
+
+const TEAM_RANK = {
+  "France":1,"Spain":2,"Argentina":3,"England":4,"Portugal":5,"Brazil":6,"Netherlands":7,"Morocco":8,"Belgium":9,"Germany":10,"Croatia":11,"Colombia":12,
+  "Senegal":13,"Mexico":14,"United States":15,"Uruguay":16,"Japan":17,"Switzerland":18,"Iran":19,"Türkiye":20,"Ecuador":21,"Austria":22,"South Korea":23,"Australia":24,
+  "Algeria":25,"Egypt":26,"Canada":27,"Norway":28,"Panama":29,"Côte d’Ivoire":30,"Sweden":31,"Paraguay":32,"Czechia":33,"Scotland":34,"Tunisia":35,"DR Congo":36,
+  "Uzbekistan":37,"Qatar":38,"Iraq":39,"South Africa":40,"Saudi Arabia":41,"Jordan":42,"Bosnia and Herzegovina":43,"Cabo Verde":44,"Ghana":45,"Curaçao":46,"Haiti":47,"New Zealand":48
 };
 
 function teamDisplayName(team, compact = false) {
@@ -379,6 +496,112 @@ function renderBars(id, rows, labelKey, valueKey, options = {}) {
     </div>`;
   }).join("");
 }
+
+function calculatePerformanceStats(playerStats, players) {
+  const drawRows = players.map(p => ({
+    player: p.player,
+    drawTotal: p.teams.reduce((n,t) => n + (TEAM_RANK[normaliseTeam(t)] || 99), 0)
+  })).sort((a,b) => a.drawTotal - b.drawTotal || a.player.localeCompare(b.player));
+
+  const drawRank = {};
+  drawRows.forEach((p, i) => drawRank[p.player] = i + 1);
+
+  const liveRank = {};
+  playerStats.forEach((p, i) => liveRank[p.player] = i + 1);
+
+  return playerStats.map(p => ({
+    ...p,
+    drawRank: drawRank[p.player] || null,
+    liveRank: liveRank[p.player] || null,
+    performance: (drawRank[p.player] || 0) - (liveRank[p.player] || 0)
+  })).sort((a,b) => b.performance - a.performance || b.total - a.total || a.player.localeCompare(b.player));
+}
+
+function renderPerformanceTable(id, rows) {
+  const holder = document.getElementById(id);
+  if (!holder) return;
+  holder.innerHTML = `
+    <div class="rankRow header performance">
+      <div>Player</div><div>Draw</div><div>Live</div><div>+/-</div>
+    </div>
+    ${rows.map(r => `
+      <div class="rankRow performance">
+        <div class="rankName">${escapeHtml(r.player)}</div>
+        <div class="rankVal">${r.drawRank}</div>
+        <div class="rankVal">${r.liveRank}</div>
+        <div class="rankVal ${r.performance > 0 ? "good" : r.performance < 0 ? "bad" : ""}">${r.performance > 0 ? "+" : ""}${r.performance}</div>
+      </div>
+    `).join("")}
+  `;
+}
+
+function renderPPGTable(id, rows) {
+  const holder = document.getElementById(id);
+  if (!holder) return;
+  const ranked = rows.map(r => ({
+    ...r,
+    ppg: r.played ? r.total / r.played : 0
+  })).sort((a,b) => b.ppg - a.ppg || b.total - a.total || a.player.localeCompare(b.player));
+
+  holder.innerHTML = `
+    <div class="rankRow header">
+      <div>Player</div><div>Pts</div><div>MP</div><div>PPG</div>
+    </div>
+    ${ranked.map(r => `
+      <div class="rankRow">
+        <div class="rankName">${escapeHtml(r.player)}</div>
+        <div class="rankVal">${r.total}</div>
+        <div class="rankVal">${r.played}</div>
+        <div class="rankVal">${r.ppg.toFixed(2)}</div>
+      </div>
+    `).join("")}
+  `;
+}
+
+function renderScatter(id, rows) {
+  const holder = document.getElementById(id);
+  if (!holder) return;
+
+  const width = 720, height = 360;
+  const margin = {left:56, right:28, top:22, bottom:52};
+  const plotW = width - margin.left - margin.right;
+  const plotH = height - margin.top - margin.bottom;
+
+  const maxGoals = Math.max(1, ...rows.map(r => r.goals));
+  const minPts = Math.min(0, ...rows.map(r => r.total));
+  const maxPts = Math.max(1, ...rows.map(r => r.total));
+  const yRange = maxPts - minPts || 1;
+
+  const x = val => margin.left + (val / maxGoals) * plotW;
+  const y = val => margin.top + (1 - ((val - minPts) / yRange)) * plotH;
+
+  const xTicks = [0, Math.ceil(maxGoals / 2), maxGoals];
+  const yTicks = [minPts, Math.round((minPts + maxPts) / 2), maxPts];
+
+  holder.innerHTML = `
+    <svg class="scatterSvg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Scatter plot of points against goals scored">
+      ${xTicks.map(t => `<line class="scatterGridLine" x1="${x(t)}" y1="${margin.top}" x2="${x(t)}" y2="${height-margin.bottom}"></line>`).join("")}
+      ${yTicks.map(t => `<line class="scatterGridLine" x1="${margin.left}" y1="${y(t)}" x2="${width-margin.right}" y2="${y(t)}"></line>`).join("")}
+      <line class="scatterAxis" x1="${margin.left}" y1="${height-margin.bottom}" x2="${width-margin.right}" y2="${height-margin.bottom}"></line>
+      <line class="scatterAxis" x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${height-margin.bottom}"></line>
+      ${xTicks.map(t => `<text class="scatterLabel" x="${x(t)}" y="${height-26}" text-anchor="middle">${t}</text>`).join("")}
+      ${yTicks.map(t => `<text class="scatterLabel" x="${margin.left-10}" y="${y(t)+4}" text-anchor="end">${t}</text>`).join("")}
+      <text class="scatterLabel" x="${margin.left + plotW/2}" y="${height-6}" text-anchor="middle">Goals scored</text>
+      <text class="scatterLabel" x="16" y="${margin.top + plotH/2}" text-anchor="middle" transform="rotate(-90 16 ${margin.top + plotH/2})">Points</text>
+      ${rows.map(r => {
+        const cx = x(r.goals), cy = y(r.total);
+        const short = escapeHtml(r.player.split(" ")[0].slice(0,3));
+        return `<g>
+          <title>${escapeHtml(r.player)} — ${r.goals} goals, ${r.total} pts</title>
+          <circle class="scatterPoint" cx="${cx}" cy="${cy}" r="7"></circle>
+          <text class="scatterPointLabel" x="${cx+9}" y="${cy+4}">${short}</text>
+        </g>`;
+      }).join("")}
+    </svg>
+    <p class="smallNote">The bottom-right area is the unlucky zone: lots of goals, not many points.</p>
+  `;
+}
+
 function tiedNames(rows, metric) {
   if (!rows.length) return "–";
   const max = Math.max(...rows.map(r => Number(r[metric]) || 0));
@@ -394,12 +617,18 @@ async function loadStats() {
     const playerStats = calculatePlayerStats(matches, groupData, players);
     const countryStats = calculateCountryStats(matches, groupData, players);
 
+    const performanceStats = calculatePerformanceStats(playerStats, players);
+
     document.getElementById("statLeader").textContent = playerStats[0] ? `${playerStats[0].player} (${playerStats[0].total})` : "–";
     document.getElementById("statCountry").textContent = countryStats[0] ? `${countryStats[0].team} (${countryStats[0].total})` : "–";
     document.getElementById("statGoals").textContent = tiedNames(playerStats, "goals");
     document.getElementById("statGA").textContent = tiedNames(playerStats, "goalsConceded");
 
     renderBars("playerPoints", playerStats, "player", "total");
+
+    renderPerformanceTable("performanceTable", performanceStats);
+    renderPPGTable("ppgTable", playerStats);
+    renderScatter("unluckyScatter", playerStats);
     renderBars("playerGoals", [...playerStats].sort((a,b)=>b.goals-a.goals || b.total-a.total), "player", "goals");
     renderBars("playerGA", [...playerStats].sort((a,b)=>b.goalsConceded-a.goalsConceded || a.total-b.total), "player", "goalsConceded");
     renderBars("countryPoints", countryStats, "team", "total", {flag:true});
