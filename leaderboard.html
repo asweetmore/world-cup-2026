@@ -340,7 +340,7 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
 <body>
 <header>
   <h1>🏆 Current Leaderboard</h1>
-  <div class="subtitle">Live table calculated from latest results. Ties are split by wins, goals scored, goals conceded, then red cards.</div>
+  <div class="subtitle">Live table calculated from latest results. Ties are split by wins, goal difference, goals scored, goals conceded, then red cards.</div>
   <div class="controls">
     <a class="navLink" href="index.html">Players & Teams</a>
     <a class="navLink" href="fixtures-results.html">Fixtures & Results</a>
@@ -617,14 +617,16 @@ function calculateLeaderboard(matches, groupData, players) {
     const goals = teamDetails.reduce((n,t)=>n+t.goals,0);
     const reds = teamDetails.reduce((n,t)=>n+t.reds,0);
     const goalsConceded = teamDetails.reduce((n,t)=>n+t.goalsConceded,0);
+    const goalDifference = goals - goalsConceded;
     const wins = teamDetails.reduce((n,t)=>n+t.wins,0);
     const draws = teamDetails.reduce((n,t)=>n+t.draws,0);
     const cleanSheets = teamDetails.reduce((n,t)=>n+t.cleanSheets,0);
     const groupBonus = teamDetails.reduce((n,t)=>n+t.groupBonus,0);
-    return {player:p.player, teams:p.teams, total, played, goals, goalsConceded, reds, wins, draws, cleanSheets, groupBonus, teamDetails};
+    return {player:p.player, teams:p.teams, total, played, goals, goalsConceded, goalDifference, reds, wins, draws, cleanSheets, groupBonus, teamDetails};
   }).sort((a,b) =>
     b.total - a.total ||
     b.wins - a.wins ||
+    b.goalDifference - a.goalDifference ||
     b.goals - a.goals ||
     a.goalsConceded - b.goalsConceded ||
     a.reds - b.reds ||
@@ -635,7 +637,7 @@ function calculateLeaderboard(matches, groupData, players) {
 
 
 function playerStatLine(p) {
-  return `MP ${p.played} · W ${p.wins} · D ${p.draws} · G ${p.goals} · GA ${p.goalsConceded} · CS ${p.cleanSheets} · RC ${p.reds}`;
+  return `MP ${p.played} · W ${p.wins} · D ${p.draws} · GD ${p.goalDifference} · G ${p.goals} · GA ${p.goalsConceded} · CS ${p.cleanSheets} · RC ${p.reds}`;
 }
 
 function renderTeamChip(t, compact = false) {

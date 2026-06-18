@@ -102,38 +102,6 @@ main { max-width:1320px; margin:0 auto; padding:0 22px 44px; }
 }
 .rankVal.good { color:var(--green); }
 .rankVal.bad { color:var(--red); }
-.scatterWrap {
-  width:100%;
-  overflow-x:auto;
-}
-.scatterSvg {
-  width:100%;
-  min-width:620px;
-  height:auto;
-  display:block;
-}
-.scatterAxis {
-  stroke:rgba(255,255,255,.28);
-  stroke-width:1;
-}
-.scatterGridLine {
-  stroke:rgba(255,255,255,.09);
-  stroke-width:1;
-}
-.scatterLabel {
-  fill:var(--muted);
-  font-size:12px;
-}
-.scatterPointLabel {
-  fill:var(--text);
-  font-size:11px;
-  font-weight:900;
-}
-.scatterPoint {
-  fill:var(--gold);
-  stroke:rgba(7,18,31,.85);
-  stroke-width:2;
-}
 @media(max-width:620px) {
   .rankRow {
     grid-template-columns: 1fr auto auto;
@@ -220,18 +188,7 @@ main { max-width:1320px; margin:0 auto; padding:0 22px 44px; }
       </div>
       <div id="playerGA" class="bars"></div>
     </article>
-
-    <article class="chartCard full">
-      <div class="chartHeader">
-        <div>
-          <h2 class="chartTitle">Unluckiest player: points vs goals scored</h2>
-          <p class="chartSub">High goals with low points suggests a player whose teams score but still do not convert it into sweepstake points.</p>
-        </div>
-      </div>
-      <div id="unluckyScatter" class="scatterWrap"></div>
-    </article>
-
-    <article class="chartCard">
+<article class="chartCard">
       <div class="chartHeader">
         <div>
           <h2 class="chartTitle">Country points</h2>
@@ -628,7 +585,6 @@ async function loadStats() {
 
     renderPerformanceTable("performanceTable", performanceStats);
     renderPPGTable("ppgTable", playerStats);
-    renderScatter("unluckyScatter", playerStats);
     renderBars("playerGoals", [...playerStats].sort((a,b)=>b.goals-a.goals || b.total-a.total), "player", "goals");
     renderBars("playerGA", [...playerStats].sort((a,b)=>b.goalsConceded-a.goalsConceded || a.total-b.total), "player", "goalsConceded");
     renderBars("countryPoints", countryStats, "team", "total", {flag:true});
