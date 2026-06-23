@@ -600,7 +600,7 @@ function calculateLeaderboard(matches, groupData, players) {
     const teamDetails = p.teams.map(team => {
       const t = normaliseTeam(team);
       const teamMatches = matches.filter(m => normaliseTeam(m.homeTeam) === t || normaliseTeam(m.awayTeam) === t);
-      let played=0, wins=0, draws=0, goals=0, goalsConceded=0, cleanSheets=0, reds=0, matchPoints=0;
+      let played=0, wins=0, draws=0, penaltyWins=0, goals=0, goalsConceded=0, cleanSheets=0, reds=0, matchPoints=0;
       teamMatches.forEach(m => {
         if (!matchPlayed(m)) return;
         played++;
@@ -609,7 +609,9 @@ function calculateLeaderboard(matches, groupData, players) {
         const ga = isHome ? num(m.awayScore) : num(m.homeScore);
         const rc = isHome ? (num(m.homeRC)||0) : (num(m.awayRC)||0);
         if (gf > ga) wins++;
+        const wonOnPensForDisplay = gf === ga && ((isHome && isTruthyFlag(m.homePW)) || (!isHome && isTruthyFlag(m.awayPW)));
         if (gf === ga) draws++;
+        if (wonOnPensForDisplay) penaltyWins++;
         if (ga === 0) cleanSheets++;
         goals += gf;
         goalsConceded += ga;
@@ -619,7 +621,7 @@ function calculateLeaderboard(matches, groupData, players) {
       const groupBonus = groupData[t]?.groupBonus || 0;
       const groupPosition = groupData[t]?.position || null;
       const total = matchPoints + groupBonus;
-      return {team:t, played, wins, draws, goals, goalsConceded, cleanSheets, reds, matchPoints, groupBonus, groupPosition, total};
+      return {team:t, played, wins, draws, penaltyWins, displayWins:wins + penaltyWins, displayDraws:draws - penaltyWins, goals, goalsConceded, cleanSheets, reds, matchPoints, groupBonus, groupPosition, total};
     });
     const total = teamDetails.reduce((n,t)=>n+t.total,0);
     const played = teamDetails.reduce((n,t)=>n+t.played,0);
@@ -629,9 +631,12 @@ function calculateLeaderboard(matches, groupData, players) {
     const goalDifference = goals - goalsConceded;
     const wins = teamDetails.reduce((n,t)=>n+t.wins,0);
     const draws = teamDetails.reduce((n,t)=>n+t.draws,0);
+    const penaltyWins = teamDetails.reduce((n,t)=>n+(t.penaltyWins || 0),0);
+    const displayWins = wins + penaltyWins;
+    const displayDraws = draws - penaltyWins;
     const cleanSheets = teamDetails.reduce((n,t)=>n+t.cleanSheets,0);
     const groupBonus = teamDetails.reduce((n,t)=>n+t.groupBonus,0);
-    return {player:p.player, teams:p.teams, total, played, goals, goalsConceded, goalDifference, reds, wins, draws, cleanSheets, groupBonus, teamDetails};
+    return {player:p.player, teams:p.teams, total, played, goals, goalsConceded, goalDifference, reds, wins, draws, displayWins, displayDraws, cleanSheets, groupBonus, teamDetails};
   }).sort((a,b) =>
     b.total - a.total ||
     b.wins - a.wins ||
@@ -646,7 +651,7 @@ function calculateLeaderboard(matches, groupData, players) {
 
 
 function playerStatLine(p) {
-  return `MP ${p.played} · W ${p.wins} · D ${p.draws} · GD ${p.goalDifference} · G ${p.goals} · GA ${p.goalsConceded} · CS ${p.cleanSheets} · RC ${p.reds}`;
+  return `MP ${p.played} · W ${p.displayWins ?? p.wins} · D ${p.displayDraws ?? p.draws} · GD ${p.goalDifference} · G ${p.goals} · GA ${p.goalsConceded} · CS ${p.cleanSheets} · RC ${p.reds}`;
 }
 
 function renderTeamChip(t, compact = false) {
@@ -747,8 +752,8 @@ function renderTeamDetail(t) {
   return `
     <div class="teamScore">
       <strong>${escapeHtml(t.team)}</strong>
-      <span>W ${t.wins}</span>
-      <span>D ${t.draws}</span>
+      <span>W ${t.displayWins ?? t.wins}</span>
+      <span>D ${t.displayDraws ?? t.draws}</span>
       <span>G ${t.goals}</span>
       <span>GA ${t.goalsConceded}</span>
       <span>CS ${t.cleanSheets}</span>
