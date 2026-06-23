@@ -491,7 +491,9 @@ function parseMatches(rows) {
     homeScore: getField(r, ["Home Score","Home Goals","HG"]),
     awayScore: getField(r, ["Away Score","Away Goals","AG"]),
     homeRC: getField(r, ["Home RC","Home Red Cards","Home Reds"]),
-    awayRC: getField(r, ["Away RC","Away Red Cards","Away Reds"])
+    awayRC: getField(r, ["Away RC","Away Red Cards","Away Reds"]),
+    homePW: getField(r, ["Home PW","Home Pen Win","Home Penalty Win","Home Penalty Winner","HPW"]),
+    awayPW: getField(r, ["Away PW","Away Pen Win","Away Penalty Win","Away Penalty Winner","APW"])
   }));
 }
 function parsePlayers(rows) {
@@ -505,6 +507,10 @@ function parsePlayers(rows) {
     ].map(normaliseTeam).filter(Boolean)
   })).filter(p => p.player && p.teams.length);
 }
+function isTruthyFlag(value) {
+  const v = String(value ?? "").trim().toLowerCase();
+  return v === "1" || v === "yes" || v === "y" || v === "true" || v === "pw";
+}
 function scoreTeamInMatch(match, team) {
   team = normaliseTeam(team);
   const home = normaliseTeam(match.homeTeam);
@@ -517,7 +523,10 @@ function scoreTeamInMatch(match, team) {
   const reds = isHome ? (num(match.homeRC) ?? 0) : (num(match.awayRC) ?? 0);
   let points = 0;
   if (goalsFor > goalsAgainst) points += 3;
-  else if (goalsFor === goalsAgainst) points += 1;
+  else if (goalsFor === goalsAgainst) {
+    points += 1;
+    if ((isHome && isTruthyFlag(match.homePW)) || (!isHome && isTruthyFlag(match.awayPW))) points += 2;
+  }
   if (goalsAgainst === 0) points += 2;
   points += goalsFor;
   points -= reds;

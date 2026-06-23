@@ -154,6 +154,20 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 22px 44px; }
   background:linear-gradient(90deg,rgba(255,209,102,.42),rgba(255,255,255,0));
 }
 
+
+.penBadge {
+  display:inline-flex;
+  margin-top:5px;
+  padding:4px 8px;
+  border-radius:999px;
+  background:rgba(255,209,102,.16);
+  border:1px solid rgba(255,209,102,.34);
+  color:var(--gold);
+  font-size:.72rem;
+  font-weight:1000;
+  line-height:1;
+}
+
 </style>
 </head>
 <body>
@@ -313,7 +327,9 @@ function parseMatches(rows) {
     homeScore: getField(r, ["Home Score","Home Goals","HG"]),
     awayScore: getField(r, ["Away Score","Away Goals","AG"]),
     homeRC: getField(r, ["Home RC","Home Red Cards","Home Reds"]),
-    awayRC: getField(r, ["Away RC","Away Red Cards","Away Reds"])
+    awayRC: getField(r, ["Away RC","Away Red Cards","Away Reds"]),
+    homePW: getField(r, ["Home PW","Home Pen Win","Home Penalty Win","Home Penalty Winner","HPW"]),
+    awayPW: getField(r, ["Away PW","Away Pen Win","Away Penalty Win","Away Penalty Winner","APW"])
   }));
 }
 function parseOwners(rows) {
@@ -456,6 +472,10 @@ function renderStats() {
   els.statGoals.textContent = goals;
   els.statReds.textContent = reds;
 }
+function isTruthyFlag(value) {
+  const v = String(value ?? "").trim().toLowerCase();
+  return v === "1" || v === "yes" || v === "y" || v === "true" || v === "pw";
+}
 function ownerText(team) {
   const owners = teamOwners[normaliseTeam(team)] || [];
   if (!owners.length) return "Unowned";
@@ -466,6 +486,7 @@ function renderMatch(m) {
   const score = played ? `${num(m.homeScore)} - ${num(m.awayScore)}` : "v";
   const homeRed = num(m.homeRC) || 0, awayRed = num(m.awayRC) || 0;
   const homeFlag = flagUrl(m.homeTeam), awayFlag = flagUrl(m.awayTeam);
+  const penaltyWinner = isTruthyFlag(m.homePW) ? "Home won on pens" : isTruthyFlag(m.awayPW) ? "Away won on pens" : "";
 
   return `
     <article class="match">
@@ -481,6 +502,7 @@ function renderMatch(m) {
 
       <div class="scoreBox">
         <div class="score">${score}</div>
+        ${penaltyWinner ? `<div class="penBadge">${penaltyWinner}</div>` : ""}
         <div class="status ${played ? "finished" : ""}">${played ? "Result" : "TBC"}</div>
       </div>
 
